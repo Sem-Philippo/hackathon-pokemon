@@ -22,3 +22,13 @@ export * from './enums';
  * 
  */
 export type Todo = Prisma.TodoModel
+/**
+ * Model Pokemon
+ * 
+ */
+export type Pokemon = Prisma.PokemonModel
+/**
+ * Model Evolution
+ * 
+ */
+export type Evolution = Prisma.EvolutionModel

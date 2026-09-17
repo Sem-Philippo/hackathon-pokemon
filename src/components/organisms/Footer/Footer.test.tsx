@@ -4,7 +4,7 @@ import { Footer } from "./Footer";
 
 test("renders copyright text", async () => {
   const screen = await render(<Footer />);
-  await expect.element(screen.getByText("© 2026 Todoish")).toBeVisible();
+  await expect.element(screen.getByText("© 2026 Pokedachi")).toBeVisible();
 });
 
 test("renders Terms and Privacy links with href #", async () => {

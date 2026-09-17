@@ -1,6 +1,6 @@
 # Agent conventions
 
-This repo is a Next.js App Router app. Today `/` is a single-user todo list (`Todoish`).
+This repo is a Next.js App Router app. Today `/` is a single-user pokemon pet simulator (`Pokedachi`).
 
 Stack that differs from older training data: Next 16, React 19, Prisma 7 (SQLite; generated client in `src/generated/prisma`), Tailwind 4, Storybook 10, Vitest browser + Playwright.
 

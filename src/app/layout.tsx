@@ -13,9 +13,9 @@ const geistMono = Geist_Mono({
 });
 
 export const metadata: Metadata = {
-  title: "Todoish",
+  title: "Pokedachi",
   description:
-    "A single-user todo app used as sample code for a frontend course.",
+    "A Pokémon pet simulator and care app built on a playful todo-inspired base.",
 };
 
 export default function RootLayout({ children }: LayoutProps<"/">) {

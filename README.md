@@ -1,6 +1,6 @@
-# Todoish — course sample
+# Pokedachi
 
-**Todoish** is a single-user todo sample for the course, not a production app.
+**Pokedachi** is a Pokémon pet simulator and care app built on a lightweight todo-style base.
 
 Coding conventions for this repo live in [`AGENTS.md`](./AGENTS.md).
 
@@ -33,10 +33,21 @@ Execute using `npm run [name of script]`
 
 - `dev` — Next.js app at http://localhost:3000/
 - `storybook` — Storybook UI on port 6006
+- `import:pokemon` — import Pokémon data from PokeAPI; accepts `--all`, `--id <id>`, or `--from <start> --to <end>`
 - `test` — Vitest (storybook, components, and actions projects)
 - `test:e2e` — Playwright e2e
 - `prisma:migrate` — apply existing migrations; creates `prisma/dev.db`
 - `prisma:generate` — generate the Prisma client
+
+### Pokémon import commands
+
+```bash
+npm run import:pokemon -- --all
+npm run import:pokemon -- --id 25
+npm run import:pokemon -- --from 10 --to 12
+```
+
+These commands import the selected Pokémon and their forms/varieties from PokeAPI into the local SQLite database. The importer is a standalone data utility and is not part of the normal runtime app flow.
 
 ## File structure
 
