@@ -4,8 +4,9 @@ import {
   normalizeFormName,
   normalizePokemonName,
   parseImportArgs,
+  resolveMinLevel,
   resolveImportIds,
-  resolveMinValue,
+  resolveMinHappy,
 } from "@/lib/pokemonImporter";
 
 describe("pokemon importer helpers", () => {
@@ -27,11 +28,16 @@ describe("pokemon importer helpers", () => {
     expect(normalizePokemonName("mewtwo-armored")).toBe("mewtwo");
   });
 
-  it("collapses evolution requirements to a single min value", () => {
-    expect(resolveMinValue({ min_happiness: 220 })).toBe(220);
-    expect(resolveMinValue({ min_beauty: 123 })).toBe(123);
-    expect(resolveMinValue({ min_affection: 55 })).toBe(55);
-    expect(resolveMinValue({})).toBeNull();
+  it("collapses happiness-like evolution requirements to minHappy", () => {
+    expect(resolveMinHappy({ min_happiness: 220 })).toBe(220);
+    expect(resolveMinHappy({ min_beauty: 123 })).toBe(123);
+    expect(resolveMinHappy({ min_affection: 55 })).toBe(55);
+    expect(resolveMinHappy({})).toBeNull();
+  });
+
+  it("keeps minimum level separate", () => {
+    expect(resolveMinLevel({ min_level: 20 })).toBe(20);
+    expect(resolveMinLevel({})).toBeNull();
   });
 
   it("resolves explicit IDs and ranges into a clean import list", () => {

@@ -31,7 +31,8 @@ export type EvolutionAvgAggregateOutputType = {
   fromPokemonId: number | null
   toPokemonId: number | null
   gender: number | null
-  minValue: number | null
+  minHappy: number | null
+  minLevel: number | null
 }
 
 export type EvolutionSumAggregateOutputType = {
@@ -39,7 +40,8 @@ export type EvolutionSumAggregateOutputType = {
   fromPokemonId: number | null
   toPokemonId: number | null
   gender: number | null
-  minValue: number | null
+  minHappy: number | null
+  minLevel: number | null
 }
 
 export type EvolutionMinAggregateOutputType = {
@@ -50,7 +52,8 @@ export type EvolutionMinAggregateOutputType = {
   trigger: string | null
   gender: number | null
   heldItem: string | null
-  minValue: number | null
+  minHappy: number | null
+  minLevel: number | null
   timeOfDay: string | null
 }
 
@@ -62,7 +65,8 @@ export type EvolutionMaxAggregateOutputType = {
   trigger: string | null
   gender: number | null
   heldItem: string | null
-  minValue: number | null
+  minHappy: number | null
+  minLevel: number | null
   timeOfDay: string | null
 }
 
@@ -74,7 +78,8 @@ export type EvolutionCountAggregateOutputType = {
   trigger: number
   gender: number
   heldItem: number
-  minValue: number
+  minHappy: number
+  minLevel: number
   timeOfDay: number
   _all: number
 }
@@ -85,7 +90,8 @@ export type EvolutionAvgAggregateInputType = {
   fromPokemonId?: true
   toPokemonId?: true
   gender?: true
-  minValue?: true
+  minHappy?: true
+  minLevel?: true
 }
 
 export type EvolutionSumAggregateInputType = {
@@ -93,7 +99,8 @@ export type EvolutionSumAggregateInputType = {
   fromPokemonId?: true
   toPokemonId?: true
   gender?: true
-  minValue?: true
+  minHappy?: true
+  minLevel?: true
 }
 
 export type EvolutionMinAggregateInputType = {
@@ -104,7 +111,8 @@ export type EvolutionMinAggregateInputType = {
   trigger?: true
   gender?: true
   heldItem?: true
-  minValue?: true
+  minHappy?: true
+  minLevel?: true
   timeOfDay?: true
 }
 
@@ -116,7 +124,8 @@ export type EvolutionMaxAggregateInputType = {
   trigger?: true
   gender?: true
   heldItem?: true
-  minValue?: true
+  minHappy?: true
+  minLevel?: true
   timeOfDay?: true
 }
 
@@ -128,7 +137,8 @@ export type EvolutionCountAggregateInputType = {
   trigger?: true
   gender?: true
   heldItem?: true
-  minValue?: true
+  minHappy?: true
+  minLevel?: true
   timeOfDay?: true
   _all?: true
 }
@@ -227,7 +237,8 @@ export type EvolutionGroupByOutputType = {
   trigger: string | null
   gender: number | null
   heldItem: string | null
-  minValue: number | null
+  minHappy: number | null
+  minLevel: number | null
   timeOfDay: string | null
   _count: EvolutionCountAggregateOutputType | null
   _avg: EvolutionAvgAggregateOutputType | null
@@ -262,7 +273,8 @@ export type EvolutionWhereInput = {
   trigger?: Prisma.StringNullableFilter<"Evolution"> | string | null
   gender?: Prisma.IntNullableFilter<"Evolution"> | number | null
   heldItem?: Prisma.StringNullableFilter<"Evolution"> | string | null
-  minValue?: Prisma.IntNullableFilter<"Evolution"> | number | null
+  minHappy?: Prisma.IntNullableFilter<"Evolution"> | number | null
+  minLevel?: Prisma.IntNullableFilter<"Evolution"> | number | null
   timeOfDay?: Prisma.StringNullableFilter<"Evolution"> | string | null
   fromPokemon?: Prisma.XOR<Prisma.PokemonScalarRelationFilter, Prisma.PokemonWhereInput>
   toPokemon?: Prisma.XOR<Prisma.PokemonScalarRelationFilter, Prisma.PokemonWhereInput>
@@ -276,7 +288,8 @@ export type EvolutionOrderByWithRelationInput = {
   trigger?: Prisma.SortOrderInput | Prisma.SortOrder
   gender?: Prisma.SortOrderInput | Prisma.SortOrder
   heldItem?: Prisma.SortOrderInput | Prisma.SortOrder
-  minValue?: Prisma.SortOrderInput | Prisma.SortOrder
+  minHappy?: Prisma.SortOrderInput | Prisma.SortOrder
+  minLevel?: Prisma.SortOrderInput | Prisma.SortOrder
   timeOfDay?: Prisma.SortOrderInput | Prisma.SortOrder
   fromPokemon?: Prisma.PokemonOrderByWithRelationInput
   toPokemon?: Prisma.PokemonOrderByWithRelationInput
@@ -293,7 +306,8 @@ export type EvolutionWhereUniqueInput = Prisma.AtLeast<{
   trigger?: Prisma.StringNullableFilter<"Evolution"> | string | null
   gender?: Prisma.IntNullableFilter<"Evolution"> | number | null
   heldItem?: Prisma.StringNullableFilter<"Evolution"> | string | null
-  minValue?: Prisma.IntNullableFilter<"Evolution"> | number | null
+  minHappy?: Prisma.IntNullableFilter<"Evolution"> | number | null
+  minLevel?: Prisma.IntNullableFilter<"Evolution"> | number | null
   timeOfDay?: Prisma.StringNullableFilter<"Evolution"> | string | null
   fromPokemon?: Prisma.XOR<Prisma.PokemonScalarRelationFilter, Prisma.PokemonWhereInput>
   toPokemon?: Prisma.XOR<Prisma.PokemonScalarRelationFilter, Prisma.PokemonWhereInput>
@@ -307,7 +321,8 @@ export type EvolutionOrderByWithAggregationInput = {
   trigger?: Prisma.SortOrderInput | Prisma.SortOrder
   gender?: Prisma.SortOrderInput | Prisma.SortOrder
   heldItem?: Prisma.SortOrderInput | Prisma.SortOrder
-  minValue?: Prisma.SortOrderInput | Prisma.SortOrder
+  minHappy?: Prisma.SortOrderInput | Prisma.SortOrder
+  minLevel?: Prisma.SortOrderInput | Prisma.SortOrder
   timeOfDay?: Prisma.SortOrderInput | Prisma.SortOrder
   _count?: Prisma.EvolutionCountOrderByAggregateInput
   _avg?: Prisma.EvolutionAvgOrderByAggregateInput
@@ -327,7 +342,8 @@ export type EvolutionScalarWhereWithAggregatesInput = {
   trigger?: Prisma.StringNullableWithAggregatesFilter<"Evolution"> | string | null
   gender?: Prisma.IntNullableWithAggregatesFilter<"Evolution"> | number | null
   heldItem?: Prisma.StringNullableWithAggregatesFilter<"Evolution"> | string | null
-  minValue?: Prisma.IntNullableWithAggregatesFilter<"Evolution"> | number | null
+  minHappy?: Prisma.IntNullableWithAggregatesFilter<"Evolution"> | number | null
+  minLevel?: Prisma.IntNullableWithAggregatesFilter<"Evolution"> | number | null
   timeOfDay?: Prisma.StringNullableWithAggregatesFilter<"Evolution"> | string | null
 }
 
@@ -336,7 +352,8 @@ export type EvolutionCreateInput = {
   trigger?: string | null
   gender?: number | null
   heldItem?: string | null
-  minValue?: number | null
+  minHappy?: number | null
+  minLevel?: number | null
   timeOfDay?: string | null
   fromPokemon: Prisma.PokemonCreateNestedOneWithoutEvolutionFromInput
   toPokemon: Prisma.PokemonCreateNestedOneWithoutEvolutionToInput
@@ -350,7 +367,8 @@ export type EvolutionUncheckedCreateInput = {
   trigger?: string | null
   gender?: number | null
   heldItem?: string | null
-  minValue?: number | null
+  minHappy?: number | null
+  minLevel?: number | null
   timeOfDay?: string | null
 }
 
@@ -359,7 +377,8 @@ export type EvolutionUpdateInput = {
   trigger?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   gender?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
   heldItem?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
-  minValue?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
+  minHappy?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
+  minLevel?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
   timeOfDay?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   fromPokemon?: Prisma.PokemonUpdateOneRequiredWithoutEvolutionFromNestedInput
   toPokemon?: Prisma.PokemonUpdateOneRequiredWithoutEvolutionToNestedInput
@@ -373,7 +392,8 @@ export type EvolutionUncheckedUpdateInput = {
   trigger?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   gender?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
   heldItem?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
-  minValue?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
+  minHappy?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
+  minLevel?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
   timeOfDay?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
 }
 
@@ -385,7 +405,8 @@ export type EvolutionCreateManyInput = {
   trigger?: string | null
   gender?: number | null
   heldItem?: string | null
-  minValue?: number | null
+  minHappy?: number | null
+  minLevel?: number | null
   timeOfDay?: string | null
 }
 
@@ -394,7 +415,8 @@ export type EvolutionUpdateManyMutationInput = {
   trigger?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   gender?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
   heldItem?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
-  minValue?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
+  minHappy?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
+  minLevel?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
   timeOfDay?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
 }
 
@@ -406,7 +428,8 @@ export type EvolutionUncheckedUpdateManyInput = {
   trigger?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   gender?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
   heldItem?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
-  minValue?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
+  minHappy?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
+  minLevel?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
   timeOfDay?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
 }
 
@@ -428,7 +451,8 @@ export type EvolutionCountOrderByAggregateInput = {
   trigger?: Prisma.SortOrder
   gender?: Prisma.SortOrder
   heldItem?: Prisma.SortOrder
-  minValue?: Prisma.SortOrder
+  minHappy?: Prisma.SortOrder
+  minLevel?: Prisma.SortOrder
   timeOfDay?: Prisma.SortOrder
 }
 
@@ -437,7 +461,8 @@ export type EvolutionAvgOrderByAggregateInput = {
   fromPokemonId?: Prisma.SortOrder
   toPokemonId?: Prisma.SortOrder
   gender?: Prisma.SortOrder
-  minValue?: Prisma.SortOrder
+  minHappy?: Prisma.SortOrder
+  minLevel?: Prisma.SortOrder
 }
 
 export type EvolutionMaxOrderByAggregateInput = {
@@ -448,7 +473,8 @@ export type EvolutionMaxOrderByAggregateInput = {
   trigger?: Prisma.SortOrder
   gender?: Prisma.SortOrder
   heldItem?: Prisma.SortOrder
-  minValue?: Prisma.SortOrder
+  minHappy?: Prisma.SortOrder
+  minLevel?: Prisma.SortOrder
   timeOfDay?: Prisma.SortOrder
 }
 
@@ -460,7 +486,8 @@ export type EvolutionMinOrderByAggregateInput = {
   trigger?: Prisma.SortOrder
   gender?: Prisma.SortOrder
   heldItem?: Prisma.SortOrder
-  minValue?: Prisma.SortOrder
+  minHappy?: Prisma.SortOrder
+  minLevel?: Prisma.SortOrder
   timeOfDay?: Prisma.SortOrder
 }
 
@@ -469,7 +496,8 @@ export type EvolutionSumOrderByAggregateInput = {
   fromPokemonId?: Prisma.SortOrder
   toPokemonId?: Prisma.SortOrder
   gender?: Prisma.SortOrder
-  minValue?: Prisma.SortOrder
+  minHappy?: Prisma.SortOrder
+  minLevel?: Prisma.SortOrder
 }
 
 export type EvolutionCreateNestedManyWithoutFromPokemonInput = {
@@ -561,7 +589,8 @@ export type EvolutionCreateWithoutFromPokemonInput = {
   trigger?: string | null
   gender?: number | null
   heldItem?: string | null
-  minValue?: number | null
+  minHappy?: number | null
+  minLevel?: number | null
   timeOfDay?: string | null
   toPokemon: Prisma.PokemonCreateNestedOneWithoutEvolutionToInput
 }
@@ -573,7 +602,8 @@ export type EvolutionUncheckedCreateWithoutFromPokemonInput = {
   trigger?: string | null
   gender?: number | null
   heldItem?: string | null
-  minValue?: number | null
+  minHappy?: number | null
+  minLevel?: number | null
   timeOfDay?: string | null
 }
 
@@ -591,7 +621,8 @@ export type EvolutionCreateWithoutToPokemonInput = {
   trigger?: string | null
   gender?: number | null
   heldItem?: string | null
-  minValue?: number | null
+  minHappy?: number | null
+  minLevel?: number | null
   timeOfDay?: string | null
   fromPokemon: Prisma.PokemonCreateNestedOneWithoutEvolutionFromInput
 }
@@ -603,7 +634,8 @@ export type EvolutionUncheckedCreateWithoutToPokemonInput = {
   trigger?: string | null
   gender?: number | null
   heldItem?: string | null
-  minValue?: number | null
+  minHappy?: number | null
+  minLevel?: number | null
   timeOfDay?: string | null
 }
 
@@ -643,7 +675,8 @@ export type EvolutionScalarWhereInput = {
   trigger?: Prisma.StringNullableFilter<"Evolution"> | string | null
   gender?: Prisma.IntNullableFilter<"Evolution"> | number | null
   heldItem?: Prisma.StringNullableFilter<"Evolution"> | string | null
-  minValue?: Prisma.IntNullableFilter<"Evolution"> | number | null
+  minHappy?: Prisma.IntNullableFilter<"Evolution"> | number | null
+  minLevel?: Prisma.IntNullableFilter<"Evolution"> | number | null
   timeOfDay?: Prisma.StringNullableFilter<"Evolution"> | string | null
 }
 
@@ -670,7 +703,8 @@ export type EvolutionCreateManyFromPokemonInput = {
   trigger?: string | null
   gender?: number | null
   heldItem?: string | null
-  minValue?: number | null
+  minHappy?: number | null
+  minLevel?: number | null
   timeOfDay?: string | null
 }
 
@@ -681,7 +715,8 @@ export type EvolutionCreateManyToPokemonInput = {
   trigger?: string | null
   gender?: number | null
   heldItem?: string | null
-  minValue?: number | null
+  minHappy?: number | null
+  minLevel?: number | null
   timeOfDay?: string | null
 }
 
@@ -690,7 +725,8 @@ export type EvolutionUpdateWithoutFromPokemonInput = {
   trigger?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   gender?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
   heldItem?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
-  minValue?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
+  minHappy?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
+  minLevel?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
   timeOfDay?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   toPokemon?: Prisma.PokemonUpdateOneRequiredWithoutEvolutionToNestedInput
 }
@@ -702,7 +738,8 @@ export type EvolutionUncheckedUpdateWithoutFromPokemonInput = {
   trigger?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   gender?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
   heldItem?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
-  minValue?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
+  minHappy?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
+  minLevel?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
   timeOfDay?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
 }
 
@@ -713,7 +750,8 @@ export type EvolutionUncheckedUpdateManyWithoutFromPokemonInput = {
   trigger?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   gender?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
   heldItem?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
-  minValue?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
+  minHappy?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
+  minLevel?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
   timeOfDay?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
 }
 
@@ -722,7 +760,8 @@ export type EvolutionUpdateWithoutToPokemonInput = {
   trigger?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   gender?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
   heldItem?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
-  minValue?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
+  minHappy?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
+  minLevel?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
   timeOfDay?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   fromPokemon?: Prisma.PokemonUpdateOneRequiredWithoutEvolutionFromNestedInput
 }
@@ -734,7 +773,8 @@ export type EvolutionUncheckedUpdateWithoutToPokemonInput = {
   trigger?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   gender?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
   heldItem?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
-  minValue?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
+  minHappy?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
+  minLevel?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
   timeOfDay?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
 }
 
@@ -745,7 +785,8 @@ export type EvolutionUncheckedUpdateManyWithoutToPokemonInput = {
   trigger?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   gender?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
   heldItem?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
-  minValue?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
+  minHappy?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
+  minLevel?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
   timeOfDay?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
 }
 
@@ -759,7 +800,8 @@ export type EvolutionSelect<ExtArgs extends runtime.Types.Extensions.InternalArg
   trigger?: boolean
   gender?: boolean
   heldItem?: boolean
-  minValue?: boolean
+  minHappy?: boolean
+  minLevel?: boolean
   timeOfDay?: boolean
   fromPokemon?: boolean | Prisma.PokemonDefaultArgs<ExtArgs>
   toPokemon?: boolean | Prisma.PokemonDefaultArgs<ExtArgs>
@@ -773,7 +815,8 @@ export type EvolutionSelectCreateManyAndReturn<ExtArgs extends runtime.Types.Ext
   trigger?: boolean
   gender?: boolean
   heldItem?: boolean
-  minValue?: boolean
+  minHappy?: boolean
+  minLevel?: boolean
   timeOfDay?: boolean
   fromPokemon?: boolean | Prisma.PokemonDefaultArgs<ExtArgs>
   toPokemon?: boolean | Prisma.PokemonDefaultArgs<ExtArgs>
@@ -787,7 +830,8 @@ export type EvolutionSelectUpdateManyAndReturn<ExtArgs extends runtime.Types.Ext
   trigger?: boolean
   gender?: boolean
   heldItem?: boolean
-  minValue?: boolean
+  minHappy?: boolean
+  minLevel?: boolean
   timeOfDay?: boolean
   fromPokemon?: boolean | Prisma.PokemonDefaultArgs<ExtArgs>
   toPokemon?: boolean | Prisma.PokemonDefaultArgs<ExtArgs>
@@ -801,11 +845,12 @@ export type EvolutionSelectScalar = {
   trigger?: boolean
   gender?: boolean
   heldItem?: boolean
-  minValue?: boolean
+  minHappy?: boolean
+  minLevel?: boolean
   timeOfDay?: boolean
 }
 
-export type EvolutionOmit<ExtArgs extends runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs> = runtime.Types.Extensions.GetOmit<"id" | "fromPokemonId" | "toPokemonId" | "item" | "trigger" | "gender" | "heldItem" | "minValue" | "timeOfDay", ExtArgs["result"]["evolution"]>
+export type EvolutionOmit<ExtArgs extends runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs> = runtime.Types.Extensions.GetOmit<"id" | "fromPokemonId" | "toPokemonId" | "item" | "trigger" | "gender" | "heldItem" | "minHappy" | "minLevel" | "timeOfDay", ExtArgs["result"]["evolution"]>
 export type EvolutionInclude<ExtArgs extends runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs> = {
   fromPokemon?: boolean | Prisma.PokemonDefaultArgs<ExtArgs>
   toPokemon?: boolean | Prisma.PokemonDefaultArgs<ExtArgs>
@@ -833,7 +878,8 @@ export type $EvolutionPayload<ExtArgs extends runtime.Types.Extensions.InternalA
     trigger: string | null
     gender: number | null
     heldItem: string | null
-    minValue: number | null
+    minHappy: number | null
+    minLevel: number | null
     timeOfDay: string | null
   }, ExtArgs["result"]["evolution"]>
   composites: {}
@@ -1267,7 +1313,8 @@ export interface EvolutionFieldRefs {
   readonly trigger: Prisma.FieldRef<"Evolution", 'String'>
   readonly gender: Prisma.FieldRef<"Evolution", 'Int'>
   readonly heldItem: Prisma.FieldRef<"Evolution", 'String'>
-  readonly minValue: Prisma.FieldRef<"Evolution", 'Int'>
+  readonly minHappy: Prisma.FieldRef<"Evolution", 'Int'>
+  readonly minLevel: Prisma.FieldRef<"Evolution", 'Int'>
   readonly timeOfDay: Prisma.FieldRef<"Evolution", 'String'>
 }
     

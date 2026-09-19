@@ -726,7 +726,8 @@ export const EvolutionScalarFieldEnum = {
   trigger: 'trigger',
   gender: 'gender',
   heldItem: 'heldItem',
-  minValue: 'minValue',
+  minHappy: 'minHappy',
+  minLevel: 'minLevel',
   timeOfDay: 'timeOfDay'
 } as const
 

@@ -34,11 +34,13 @@ export type EvolutionDetail = {
   min_happiness?: number | null;
   min_beauty?: number | null;
   min_affection?: number | null;
+  min_level?: number | null;
   time_of_day?: string | null;
 };
 
 export type PokeApiEvolutionChainNode = {
   species?: { name?: string; url?: string } | null;
+  evolution_details?: EvolutionDetail[];
   evolves_to?: PokeApiEvolutionChainNode[];
 };
 
@@ -72,9 +74,13 @@ export function normalizeFormName(name: string): string {
   return "Default";
 }
 
-export function resolveMinValue(detail: Partial<EvolutionDetail>): number | null {
+export function resolveMinHappy(detail: Partial<EvolutionDetail>): number | null {
   const value = detail.min_happiness ?? detail.min_beauty ?? detail.min_affection ?? null;
   return value == null ? null : Number(value);
+}
+
+export function resolveMinLevel(detail: Partial<EvolutionDetail>): number | null {
+  return detail.min_level == null ? null : Number(detail.min_level);
 }
 
 export type ImportSelection =
@@ -140,6 +146,56 @@ const POKEAPI_BASE = "https://pokeapi.co/api/v2";
 
 function sleep(ms: number) {
   return new Promise((resolve) => setTimeout(resolve, ms));
+}
+
+function formatElapsed(startedAt: number): string {
+  const elapsedSeconds = Math.floor((Date.now() - startedAt) / 1000);
+  const minutes = Math.floor(elapsedSeconds / 60);
+  const seconds = elapsedSeconds % 60;
+  return `${minutes}m ${seconds.toString().padStart(2, "0")}s`;
+}
+
+class ImportProgress {
+  private readonly interactive = Boolean(process.stdout.isTTY);
+  private readonly barWidth = 24;
+  private lineLength = 0;
+  private startedAt = Date.now();
+  private phase = "";
+  private lastFallbackUpdate = 0;
+
+  start(phase: string, total: number) {
+    this.finish();
+    this.phase = phase;
+    this.startedAt = Date.now();
+    this.lastFallbackUpdate = 0;
+    this.update(0, total, "starting");
+  }
+
+  update(completed: number, total: number, detail: string) {
+    const percentage = total === 0 ? 100 : Math.floor((completed / total) * 100);
+    const filledWidth = total === 0 ? this.barWidth : Math.floor((completed / total) * this.barWidth);
+    const bar = `${"#".repeat(filledWidth)}${"-".repeat(this.barWidth - filledWidth)}`;
+    const line = `${this.phase} [${bar}] ${percentage.toString().padStart(3)}% (${completed}/${total}) ${detail} | ${formatElapsed(this.startedAt)}`;
+
+    if (this.interactive) {
+      const padding = Math.max(0, this.lineLength - line.length);
+      process.stdout.write(`\r${line}${" ".repeat(padding)}`);
+      this.lineLength = line.length;
+      return;
+    }
+
+    if (completed === total || completed - this.lastFallbackUpdate >= 25 || total <= 25) {
+      console.log(line);
+      this.lastFallbackUpdate = completed;
+    }
+  }
+
+  finish() {
+    if (this.interactive && this.lineLength > 0) {
+      process.stdout.write("\n");
+      this.lineLength = 0;
+    }
+  }
 }
 
 export async function fetchJson<T>(url: string, optional = false): Promise<T | null> {
@@ -260,7 +316,8 @@ async function importEvolutionChain(chainId: number) {
     trigger: string | null;
     gender: number | null;
     heldItem: string | null;
-    minValue: number | null;
+    minHappy: number | null;
+    minLevel: number | null;
     timeOfDay: string | null;
   }) => {
     const existing = await prisma.evolution.findFirst({
@@ -271,7 +328,8 @@ async function importEvolutionChain(chainId: number) {
         trigger: row.trigger,
         gender: row.gender,
         heldItem: row.heldItem,
-        minValue: row.minValue,
+        minHappy: row.minHappy,
+        minLevel: row.minLevel,
         timeOfDay: row.timeOfDay,
       },
     });
@@ -298,7 +356,7 @@ async function importEvolutionChain(chainId: number) {
       await importPokemonResource(currentSpeciesId);
       await importPokemonResource(targetId);
 
-      const templates = (detail as unknown as { evolution_details?: EvolutionDetail[] })?.evolution_details ?? [];
+      const templates = detail.evolution_details ?? [];
 
       if (templates.length > 0) {
         for (const entry of templates) {
@@ -309,7 +367,8 @@ async function importEvolutionChain(chainId: number) {
             trigger: entry.trigger?.name ?? null,
             gender: entry.gender ?? null,
             heldItem: entry.held_item?.name ?? null,
-            minValue: resolveMinValue(entry),
+            minHappy: resolveMinHappy(entry),
+            minLevel: resolveMinLevel(entry),
             timeOfDay: entry.time_of_day || null,
           });
         }
@@ -321,7 +380,8 @@ async function importEvolutionChain(chainId: number) {
           trigger: null,
           gender: null,
           heldItem: null,
-          minValue: null,
+          minHappy: null,
+          minLevel: null,
           timeOfDay: null,
         });
       }
@@ -338,23 +398,41 @@ export async function importPokemonData(pokemonIds: number[] = []) {
   const selectedIds = ids.length > 0 ? ids : await prisma.pokemon.findMany({ select: { id: true } }).then((rows) => rows.map((row) => row.id));
 
   const uniqueIds = [...new Set(selectedIds)].sort((a, b) => a - b);
-  for (const id of uniqueIds) {
+  const progress = new ImportProgress();
+  progress.start("Pokemon resources", uniqueIds.length);
+  for (const [index, id] of uniqueIds.entries()) {
     await importPokemonResource(id);
+    progress.update(index + 1, uniqueIds.length, `#${id}`);
     await sleep(120);
   }
+  progress.finish();
 
   const speciesRows = await prisma.pokemon.findMany({
     select: { speciesId: true },
   });
+  const speciesIds = [...new Set(speciesRows.map((row) => row.speciesId))];
+  const chainIds = new Set<number>();
+  progress.start("Finding evolution chains", speciesIds.length);
+  for (const [index, speciesId] of speciesIds.entries()) {
+    const species = await fetchJson<PokeApiSpecies>(`${POKEAPI_BASE}/pokemon-species/${speciesId}`, true);
+    if (species) {
+      const chainId = extractIdFromUrl(species.evolution_chain?.url ?? null);
+      if (chainId) chainIds.add(chainId);
+    }
+    progress.update(index + 1, speciesIds.length, `species #${speciesId}`);
+  }
+  progress.finish();
 
-  for (const row of speciesRows) {
-    const species = await fetchJson<PokeApiSpecies>(`${POKEAPI_BASE}/pokemon-species/${row.speciesId}`, true);
-    if (!species) continue;
-    const chainId = extractIdFromUrl(species.evolution_chain?.url ?? null);
-    if (!chainId) continue;
+  await prisma.evolution.deleteMany();
+  const uniqueChainIds = [...chainIds].sort((a, b) => a - b);
+  progress.start("Evolution chains", uniqueChainIds.length);
+  for (const [index, chainId] of uniqueChainIds.entries()) {
     await importEvolutionChain(chainId);
+    progress.update(index + 1, uniqueChainIds.length, `chain #${chainId}`);
     await sleep(120);
   }
+  progress.finish();
+  console.log(`Import complete: ${uniqueIds.length} Pokemon, ${uniqueChainIds.length} evolution chains.`);
 }
 
 export async function importSelectedPokemon(selection: ImportSelection) {

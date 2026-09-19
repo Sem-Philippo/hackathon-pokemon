@@ -57,7 +57,8 @@ model Evolution {
   trigger      String?
   gender       Int?
   heldItem     String?
-  minValue     Int?
+  minHappy     Int?
+  minLevel     Int?
   timeOfDay    String?
 
   fromPokemon  Pokemon @relation("EvolutionFrom", fields: [fromPokemonId], references: [id], onDelete: Cascade)
