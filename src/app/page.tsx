@@ -12,7 +12,7 @@ import { listTodos } from "@/actions/todo/listTodos/listTodos";
 import { updateTodo } from "@/actions/todo/updateTodo/updateTodo";
 
 // the main client component
-import { TodoPage } from "@/components/pages/TodoPage/TodoPage";
+import { PokemonPage } from "@/components/pages/PokemonPage/PokemonPage";
 
 // Render this route on every request so listTodos() always returns current DB rows.
 export const dynamic = "force-dynamic";
@@ -21,11 +21,7 @@ export default async function Home() {
   const initialTodos = await listTodos();
   // main client component with server side actions passed as props
   return (
-    <TodoPage
-      initialTodos={initialTodos}
-      createTodo={createTodo}
-      updateTodo={updateTodo}
-      deleteTodo={deleteTodo}
+    <PokemonPage
     />
   );
 }

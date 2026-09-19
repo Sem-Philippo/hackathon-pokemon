@@ -8,14 +8,14 @@ export type PageTemplateProps = Omit<ComponentProps<"div">, "ref"> & {
 
 const PageTemplate = forwardRef<HTMLDivElement, PageTemplateProps>(
   function PageTemplate({ children, className, ...props }, ref) {
-    const classes = ["flex min-h-screen flex-col bg-zinc-50", className]
+    const classes = ["flex min-h-screen flex-col bg-zinc-50 h-full", className]
       .filter(Boolean)
       .join(" ");
 
     return (
       <div {...props} ref={ref} className={classes}>
         <Header />
-        <main className="flex-1 px-6 py-8">{children}</main>
+        <main className="flex-1 px-6 py-8 h-full">{children}</main>
         <Footer />
       </div>
     );
