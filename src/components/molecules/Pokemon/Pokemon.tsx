@@ -1,14 +1,10 @@
 "use client";
 
 import { useEffect, useRef, useState } from "react";
+import { type Position } from "@/components/types/Draggable";
+import { PokemonAction, type PokemonData } from "@/components/types/Pokemon";
 import "@/components/molecules/Pokemon/Pokemon.css";
-
-const enum PokemonAction {
-    Move,
-    Idle,
-    Flying,
-    Landing,
-}
+import { Draggable } from "@/components/atoms/Draggable/Draggable";
 
 type PokemonProps = {
     maxX: number;
@@ -16,29 +12,15 @@ type PokemonProps = {
     floorY: number;
 };
 
-type Position = {
-    x: number;
-    y: number;
-};
-
-type PokemonData = {
-    hp: number;
-    atk: number;
-    spAtk: number;
-    def: number;
-    spDef: number;
-    speed: number;
-    weight: number;
-    canFly: boolean;
-};
-
 const Pokemon = function Pokemon({ maxX, maxY, floorY }: PokemonProps) {
     const minActionTime = 2000;
     const maxActionTime = 5000;
     const [width, setWidth] = useState(100);
     const [height, setHeight] = useState(100);
+    const adjMaxX = maxX - width;
+    const adjMaxY = maxY - height;
     const pokemonRef = useRef<HTMLDivElement>(null);
-    const [currentAction, setCurrentAction] = useState<PokemonAction>(PokemonAction.Idle);
+    const [currentAction, setCurrentAction] = useState<PokemonAction>(PokemonAction.None);
     const [data] = useState<PokemonData>({
         hp: 100,
         atk: 10,
@@ -49,6 +31,9 @@ const Pokemon = function Pokemon({ maxX, maxY, floorY }: PokemonProps) {
         weight: 100,
         canFly: false,
     });
+
+    const startedUp = useRef<boolean>(false);
+    const initialResize = useRef<boolean>(false);
 
     const pokemonActions = [
     PokemonAction.Move,
@@ -63,46 +48,31 @@ const Pokemon = function Pokemon({ maxX, maxY, floorY }: PokemonProps) {
 
     const [isDragging, setIsDragging] = useState(false);
     const wasDragging = useRef<boolean>(false);
-    const dragOffset = useRef<Position>({ x: 0, y: 0 });
 
     const timeoutId = useRef<ReturnType<typeof setTimeout>>(undefined);
 
-    function startDragging(event: React.MouseEvent) {
-        setIsDragging(true);
-
-        dragOffset.current = {
-            x: event.clientX - position.current.x,
-            y: event.clientY - position.current.y,
-        };
-    }
-
     function stopDragging() {
-        setIsDragging(false);
-
         // Prevent pokemon from moving to target position after dragging
         targetPosition.current = { ...position.current };
 
         if (!data.canFly) {
             targetPosition.current.y = floorY;
         }
-
-        // Set action to idle for a while after dragging stops
     }
 
-
     const [displayPosition, setDisplayPosition] = useState<Position>({
-        x: 100,
-        y: 100,
+        x: 0,
+        y: floorY,
     });
 
     const position = useRef<Position>({
-        x: 100,
+        x: 0,
         y: 100,
     });
 
     const targetPosition = useRef<Position>({
-        x: 100,
-        y: 100,
+        x: 0,
+        y: floorY,
     });
 
     // Action loop
@@ -112,6 +82,7 @@ const Pokemon = function Pokemon({ maxX, maxY, floorY }: PokemonProps) {
             let validAction = false;
             let action: PokemonAction = PokemonAction.Idle;
             while (!validAction) {
+                console.log(pokemonActions.length);
                 action = pokemonActions[Math.floor(Math.random() * pokemonActions.length)];
                 validAction = true;
                 // If the pokemon is already flying, don't fly again
@@ -122,6 +93,17 @@ const Pokemon = function Pokemon({ maxX, maxY, floorY }: PokemonProps) {
                 else if (action === PokemonAction.Landing && position.current.y >= floorY) {
                     validAction = false;
                 }
+            }
+            console.log(startedUp, initialResize);
+            if (!startedUp.current) {
+                startedUp.current = true;
+                console.log("startup");
+                action = PokemonAction.Idle;
+            }
+            else if (!initialResize.current) {
+                initialResize.current = true;
+                console.log("resized");
+                action = PokemonAction.Idle;
             }
 
             switch (action) {
@@ -141,7 +123,7 @@ const Pokemon = function Pokemon({ maxX, maxY, floorY }: PokemonProps) {
 
             
             if (action === PokemonAction.Move || action === PokemonAction.Flying || action === PokemonAction.Landing) {
-                const newX = Math.floor(Math.random() * maxX - width);
+                const newX = Math.floor(Math.random() * (maxX - width));
 
                 let newY = floorY;
 
@@ -149,7 +131,6 @@ const Pokemon = function Pokemon({ maxX, maxY, floorY }: PokemonProps) {
                 if (action === PokemonAction.Flying || (action === PokemonAction.Move && data.canFly && position.current.y < floorY)) {
                     newY = Math.floor(Math.random() * maxY - height);
                 }
-
                 targetPosition.current = {
                     x: newX,
                     y: newY,
@@ -157,7 +138,13 @@ const Pokemon = function Pokemon({ maxX, maxY, floorY }: PokemonProps) {
 
                 console.log("New target:", targetPosition.current);
             }
+            else if (action === PokemonAction.Idle) {
+                if (!data.canFly) {
+                    targetPosition.current.y = floorY;
+                }
+            }
 
+            console.log("setting current action to ", action);
             setCurrentAction(action);
 
             const delay = Math.floor(Math.random() * (maxActionTime - minActionTime + 1)) + minActionTime;
@@ -211,7 +198,6 @@ const Pokemon = function Pokemon({ maxX, maxY, floorY }: PokemonProps) {
                 if (distance > 0) {
                     const movement = data.speed * deltaTime;
                     const weightReduction = data.weight * deltaTime;
-
                     if (distance <= movement) {
                         position.current = {
                             x: target.x,
@@ -221,13 +207,19 @@ const Pokemon = function Pokemon({ maxX, maxY, floorY }: PokemonProps) {
                         position.current = {
                             x: currentPosition.x + (dx / distance) * movement,
                             y: dy < 0 ? 
-                            currentPosition.y + (dy / distance) * movement + weightReduction : // Move quicker downwards
-                            currentPosition.y + (dy / distance) * (movement - weightReduction), // Move slower upwards
+                            currentPosition.y + (dy / distance) * (movement - weightReduction) : // Move slower upwards
+                            currentPosition.y + (dy / distance) * (2 * movement + weightReduction), // Move quicker downwards
                         };
                     }
 
                     setDisplayPosition(position.current);
                 }
+            }
+            if (position.current.y > floorY) {
+                console.log("below the floor");
+                console.log(floorY);
+                position.current.y = floorY;
+                setDisplayPosition(position.current);
             }
 
             animationFrame = requestAnimationFrame(movePokemon);
@@ -238,30 +230,7 @@ const Pokemon = function Pokemon({ maxX, maxY, floorY }: PokemonProps) {
         return () => {
             cancelAnimationFrame(animationFrame);
         };
-    }, [data.speed, isDragging]);
-
-    // Drag loop
-    useEffect(() => {
-        function handleMouseMove(event: MouseEvent) {
-            if (isDragging) {
-                const newX = Math.max(Math.min(event.clientX - dragOffset.current.x, maxX - width), 0);
-                const newY = Math.max(Math.min(event.clientY - dragOffset.current.y, maxY - height), 0);
-
-                    position.current = {
-                        x: newX,
-                        y: newY,
-                    };
-
-                    setDisplayPosition(position.current);
-            }
-        }
-
-        window.addEventListener("mousemove", handleMouseMove);
-
-        return () => {
-            window.removeEventListener("mousemove", handleMouseMove);
-        }
-    },[isDragging]);
+    }, [data.speed, isDragging, floorY]);
 
     useEffect(() => {
         const resizeObserver = new ResizeObserver((event) => {
@@ -273,16 +242,28 @@ const Pokemon = function Pokemon({ maxX, maxY, floorY }: PokemonProps) {
     }, []);
 
     return (
-        <div
-            className="bg-red-500 w-10 h-10 pokemon"
+        <div 
+            className="w-10 h-10 pokemon" 
+            ref={pokemonRef} 
             style={{
                 left: displayPosition.x,
                 top: displayPosition.y,
             }}
-            onMouseDown={(e) => {startDragging(e)}}
-            onMouseUp={() => {stopDragging()}}
-            ref={pokemonRef}
-        />
+        >
+            <Draggable 
+                maxX={adjMaxX} 
+                maxY={adjMaxY} 
+                setDisplayPosition={setDisplayPosition} 
+                isDragging={isDragging} 
+                setIsDragging={setIsDragging} 
+                position={position} 
+                onStop={stopDragging}>
+                <div
+                    className="bg-red-500 w-full h-full"
+                />
+            </Draggable>
+        </div>
+        
     );
 };
 
