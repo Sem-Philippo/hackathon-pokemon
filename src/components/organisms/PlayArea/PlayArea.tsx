@@ -8,6 +8,8 @@ const PlayArea = function PlayArea() {
     const [width, setWidth] = useState(100);
     const [height, setHeight] = useState(100);
 
+    const pokemon = Array.from({length: 10}, (_, i) => i);
+
     useEffect(() => {
         const resizeObserver = new ResizeObserver((event) => {
             setWidth(event[0].contentBoxSize[0].inlineSize);
@@ -20,7 +22,7 @@ const PlayArea = function PlayArea() {
 
   return (
     <div id="playArea"className="w-full h-full bg-amber-50 playArea">
-        <Pokemon maxX={width} maxY={height} floorY={height - 50}/>
+        {pokemon.map((i) => <Pokemon maxX={width} maxY={height} floorY={height - 50} key={i}/>)}
     </div>
   );
 };

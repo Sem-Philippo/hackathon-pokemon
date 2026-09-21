@@ -29,7 +29,7 @@ const Pokemon = function Pokemon({ maxX, maxY, floorY }: PokemonProps) {
         spDef: 10,
         speed: 255,
         weight: 100,
-        canFly: false,
+        canFly: true,
     });
 
     const startedUp = useRef<boolean>(false);
