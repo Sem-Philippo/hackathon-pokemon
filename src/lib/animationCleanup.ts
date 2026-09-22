@@ -66,9 +66,10 @@ export function resolveAnimationCleanupIds(selection: AnimationCleanupSelection)
 
 export function buildAnimationAliasMap(files: string[]): Record<string, string> {
   const normalized = new Set(files.map((file) => file.replace(/-Anim\.png$/i, "")));
+  const anyAnimation = [...normalized][0] ?? null;
 
-  const choose = (primary: string, fallbacks: string[] = []) => {
-    for (const candidate of [primary, ...fallbacks]) {
+  const choose = (candidates: string[]) => {
+    for (const candidate of candidates) {
       if (normalized.has(candidate)) {
         return candidate;
       }
@@ -77,14 +78,18 @@ export function buildAnimationAliasMap(files: string[]): Record<string, string> 
   };
 
   const aliases: Record<string, string | null> = {
-    Idle: choose("Idle") ?? choose("Pose", ["Shake"]) ?? choose("Walk"),
-    Walk: choose("Walk", ["Idle"]),
-    Fly: choose("Charge", ["Idle", "Walk"]),
-    Sleep: choose("EventSleep", ["Sleep", "Charge", "Idle", "Walk"]),
-    Wake: choose("Wake", ["Idle", "Walk"]),
-    Happy: choose("Pose", ["Shake", "Idle"]),
-    Eat: choose("Eat", ["Shoot", "Idle", "Walk"]),
+    Idle: choose(["Idle", "Pose", "Shake", "Walk"]),
+    Walk: choose(["Walk", "Idle"]),
+    Fly: choose(["Fly", "Charge", "Idle", "Walk"]),
+    Sleep: choose(["EventSleep", "Sleep", "Charge", "Idle", "Walk"]),
+    Wake: choose(["Wake", "Idle", "Walk"]),
+    Happy: choose(["Happy", "Pose", "Shake", "Idle"]),
+    Eat: choose(["Eat", "Shoot", "Idle", "Walk"]),
   };
+
+  for (const canonical of CANONICAL_ANIMATIONS) {
+    aliases[canonical] ??= anyAnimation;
+  }
 
   return Object.fromEntries(
     Object.entries(aliases).filter(([, value]) => value != null),
@@ -159,31 +164,33 @@ export async function cleanupAnimationFolder(id: number) {
   const entries = await fs.readdir(folderPath, { withFileTypes: true });
   const animFiles = entries.filter((entry) => entry.isFile() && isAnimAsset(entry.name)).map((entry) => entry.name);
   const mapping = buildAnimationAliasMap(animFiles);
-  const hasFallback = Boolean(mapping.Idle || mapping.Happy || mapping.Walk);
+  const hasFallback = animFiles.length > 0;
 
   if (!hasFallback) {
     return { id, moved: [], kept: [], skipped: true, missingIdle: false, lostCase: true };
   }
 
-  const keepTargets = new Set<string>();
-  const sourceToCanonical = new Map<string, string>();
+  const canonicalFiles = new Set(CANONICAL_ANIMATIONS.map((name) => `${name}-Anim.png`));
+  const copyPlan: Array<{ sourceFile: string; targetFile: string }> = [];
+  const renamePlan: Array<{ sourceFile: string; targetFile: string }> = [];
 
   for (const canonical of CANONICAL_ANIMATIONS) {
     const source = mapping[canonical];
     if (!source) continue;
-    if (!sourceToCanonical.has(source)) {
-      sourceToCanonical.set(source, canonical);
-    }
-  }
 
-  for (const [source, canonical] of sourceToCanonical.entries()) {
-    if (source === canonical) {
-      keepTargets.add(`${source}-Anim.png`);
-      continue;
-    }
+    const sourceFile = `${source}-Anim.png`;
+    const targetFile = `${canonical}-Anim.png`;
 
-    if (source !== "Idle" && canonical !== "Idle") {
-      keepTargets.add(`${canonical}-Anim.png`);
+    if (sourceFile === targetFile) continue;
+    if (animFiles.includes(targetFile)) continue;
+    if (!animFiles.includes(sourceFile)) continue;
+
+    const sourceUsageCount = Object.values(mapping).filter((value) => value === source).length;
+
+    if (sourceUsageCount > 1) {
+      copyPlan.push({ sourceFile, targetFile });
+    } else {
+      renamePlan.push({ sourceFile, targetFile });
     }
   }
 
@@ -192,21 +199,23 @@ export async function cleanupAnimationFolder(id: number) {
   const moved: string[] = [];
   const before = await fs.readdir(folderPath, { recursive: true }).catch(() => [] as string[]);
 
+  for (const { sourceFile, targetFile } of copyPlan) {
+    const sourcePath = path.join(folderPath, sourceFile);
+    const targetPath = path.join(folderPath, targetFile);
+    await fs.copyFile(sourcePath, targetPath);
+  }
+
+  for (const { sourceFile, targetFile } of renamePlan) {
+    const sourcePath = path.join(folderPath, sourceFile);
+    const targetPath = path.join(folderPath, targetFile);
+    await fs.rename(sourcePath, targetPath);
+  }
+
   for (const fileName of animFiles) {
     const sourceName = parseAnimName(fileName);
     if (!sourceName) continue;
 
-    const canonicalTarget = sourceToCanonical.get(sourceName);
-    if (canonicalTarget && canonicalTarget !== sourceName && sourceName !== "Idle") {
-      const sourcePath = path.join(folderPath, fileName);
-      const targetPath = path.join(folderPath, `${canonicalTarget}-Anim.png`);
-      if (fileName !== `${canonicalTarget}-Anim.png`) {
-        await fs.rename(sourcePath, targetPath);
-      }
-      continue;
-    }
-
-    if (!keepTargets.has(fileName)) {
+    if (!canonicalFiles.has(fileName) && !renamePlan.some((plan) => plan.sourceFile === fileName)) {
       const sourcePath = path.join(folderPath, fileName);
       const relativePath = path.relative(folderPath, sourcePath).split(path.sep).join("/");
       const targetPath = path.join(backupDir, relativePath);

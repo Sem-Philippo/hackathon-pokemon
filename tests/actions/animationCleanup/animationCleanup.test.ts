@@ -59,14 +59,32 @@ describe("animation cleanup helpers", () => {
 
     expect(buildAnimationAliasMap(["Pose-Anim.png"])).toEqual({
       Idle: "Pose",
+      Walk: "Pose",
+      Fly: "Pose",
+      Sleep: "Pose",
+      Wake: "Pose",
       Happy: "Pose",
+      Eat: "Pose",
     });
 
     expect(buildAnimationAliasMap(["Walk-Anim.png"])).toEqual({
       Idle: "Walk",
       Walk: "Walk",
+      Fly: "Walk",
+      Sleep: "Walk",
+      Wake: "Walk",
+      Happy: "Walk",
+      Eat: "Walk",
     });
 
-    expect(buildAnimationAliasMap(["Charge-Anim.png"])).toEqual({});
+    expect(buildAnimationAliasMap(["Charge-Anim.png"])).toEqual({
+      Idle: "Charge",
+      Walk: "Charge",
+      Fly: "Charge",
+      Sleep: "Charge",
+      Wake: "Charge",
+      Happy: "Charge",
+      Eat: "Charge",
+    });
   });
 });
