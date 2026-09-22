@@ -16,6 +16,8 @@ const Pokemon = function Pokemon({ maxX, maxY, floorY }: PokemonProps) {
     const minActionTime = 2000;
     const maxActionTime = 5000;
 
+    const pokemonDebug = false;
+
     // No need to update the DOM every time hunger updates
     const [hunger, setHunger] = useState(100);
     const hungerTick = 1;
@@ -109,20 +111,23 @@ const Pokemon = function Pokemon({ maxX, maxY, floorY }: PokemonProps) {
                 action = PokemonAction.Idle;
             }
 
-            switch (action) {
-                case PokemonAction.Idle:
-                    console.log("Pokemon is idling");
-                    break;
-                case PokemonAction.Move:
-                    console.log("Pokemon is moving");
-                    break;
-                case PokemonAction.Flying:
-                    console.log("Pokemon is flying");
-                    break;
-                case PokemonAction.Landing:
-                    console.log("Pokemon is landing");
-                    break;
+            if (pokemonDebug) {
+                switch (action) {
+                    case PokemonAction.Idle:
+                        console.log("Pokemon is idling");
+                        break;
+                    case PokemonAction.Move:
+                        console.log("Pokemon is moving");
+                        break;
+                    case PokemonAction.Flying:
+                        console.log("Pokemon is flying");
+                        break;
+                    case PokemonAction.Landing:
+                        console.log("Pokemon is landing");
+                        break;
+                }
             }
+            
 
             
             if (action === PokemonAction.Move || action === PokemonAction.Flying || action === PokemonAction.Landing) {
@@ -139,7 +144,10 @@ const Pokemon = function Pokemon({ maxX, maxY, floorY }: PokemonProps) {
                     y: newY,
                 };
 
-                console.log("New target:", targetPosition.current);
+                if (pokemonDebug) {
+                    console.log("New target:", targetPosition.current);
+                }
+               
             }
             else if (action === PokemonAction.Idle) {
                 if (!data.canFly) {
@@ -147,7 +155,9 @@ const Pokemon = function Pokemon({ maxX, maxY, floorY }: PokemonProps) {
                 }
             }
 
-            console.log("setting current action to ", action);
+            if (pokemonDebug) {
+                console.log("setting current action to ", action); 
+            }
             setCurrentAction(action);
 
             const delay = Math.floor(Math.random() * (maxActionTime - minActionTime + 1)) + minActionTime;
@@ -247,7 +257,7 @@ const Pokemon = function Pokemon({ maxX, maxY, floorY }: PokemonProps) {
         return () => clearInterval(intervalId);
     }, []);
 
-    useEffect(() => {console.log("hunger is now", hunger)}, [hunger]);
+    useEffect(() => {if (pokemonDebug) {console.log("hunger is now", hunger)}}, [hunger]);
 
     return (
         <div 

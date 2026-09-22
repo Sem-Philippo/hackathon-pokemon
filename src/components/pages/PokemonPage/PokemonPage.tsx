@@ -6,6 +6,7 @@ import { PageTemplate } from "@/components/templates/PageTemplate/PageTemplate";
 import { useState } from "react";
 import { PlayArea } from "@/components/organisms/PlayArea/PlayArea";
 import Button from "@/components/atoms/Button/Button";
+import { type QueuedItem, ItemType } from "@/components/types/Items";
 
 /**
  * Props = data and functions this component receives from its parent.
@@ -15,7 +16,19 @@ import Button from "@/components/atoms/Button/Button";
 
 
 const PokemonPage = function PokemonPage() {
-  const [foodCount, setFoodCount] = useState(0);
+  const [queuedItems, setQueuedItems] = useState<QueuedItem[]>([]);
+
+  const foodItems: QueuedItem[] = 
+  [{
+    name: "Sitrus berry",
+    type: ItemType.food,
+    size: {width: 40, height: 40}
+  },
+  {
+    name: "Oran berry",
+    type: ItemType.food,
+    size: {width: 40, height: 40}
+  }]
   // useState: React re-renders this component whenever these values change.
   // The function form of the initial value runs once, so we don't remap the
   // array on every render.
@@ -23,8 +36,8 @@ const PokemonPage = function PokemonPage() {
   return (
     <PageTemplate>
       <div className="w-full h-full">
-        <PlayArea/>
-        <Button onClick={() => setFoodCount((prev) => prev + 1)}><p>Food</p></Button>
+        <PlayArea queuedItems={queuedItems} setQueuedItems={setQueuedItems}/>
+        {foodItems.map((item, index) => <Button key={item.name} onClick={() => setQueuedItems((prev) => [...prev, foodItems[index]])}><p>{item.name}</p></Button>)}
       </div>
     </PageTemplate>
   );

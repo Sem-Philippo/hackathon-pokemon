@@ -1,10 +1,19 @@
 import { Position } from "./Draggable"
 
-type Item = {
+type Item = QueuedItem & {
+    position: Position,
+    uuid: string,
+}
+
+type QueuedItem = {
     name: string,
     type: ItemType,
-    position: Position,
-    // guid: 
+    size: Size,
+}
+
+type Size = {
+    width: number,
+    height: number,
 }
 
 enum ItemType {
@@ -13,4 +22,4 @@ enum ItemType {
     evolutionItem,
 }
 
-export {type Item, ItemType};
+export {type QueuedItem, type Item, type Size, ItemType};
