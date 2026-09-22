@@ -5,6 +5,7 @@ import { type Position } from "@/components/types/Draggable";
 import "@/components/molecules/GameItem/GameItem.css";
 import { Draggable } from "@/components/atoms/Draggable/Draggable";
 import { Item } from "@/components/types/Items";
+import PhysicsObject from "@/components/atoms/PhysicsObject/PhysicsObject";
 
 type GameItemProps = {
     maxX: number;
@@ -56,7 +57,17 @@ const GameItem = function GameItem({ maxX, maxY, floorY, itemData }: GameItemPro
                 height: height,
             }}
         >
-            <Draggable 
+            <PhysicsObject
+                floorY={floorY}
+                physicsPaused={isDragging}
+                moveSpeed={0}
+                weight={200}
+                hasGravity
+                position={position}
+                setDisplayPosition={setDisplayPosition}
+                targetPosition={targetPosition}
+            >
+                <Draggable 
                 maxX={adjMaxX} 
                 maxY={adjMaxY} 
                 setDisplayPosition={setDisplayPosition} 
@@ -68,6 +79,8 @@ const GameItem = function GameItem({ maxX, maxY, floorY, itemData }: GameItemPro
                     className="bg-green-500 w-full h-full"
                 />
             </Draggable>
+            </PhysicsObject>
+            
         </div>
         
     );
