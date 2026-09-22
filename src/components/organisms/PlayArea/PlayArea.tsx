@@ -19,9 +19,10 @@ const PlayArea = function PlayArea() {
 
         resizeObserver.observe(document.getElementById("playArea") as Element);
     }, []);
+    
 
   return (
-    <div id="playArea"className="w-full h-full bg-amber-50 playArea">
+    <div id="playArea"className="w-full h-full bg-amber-50 playArea" onMouseDown={(e) => {console.log("area pressed")}}>
         {pokemon.map((i) => <Pokemon maxX={width} maxY={height} floorY={height - 50} key={i}/>)}
     </div>
   );

@@ -73,7 +73,7 @@ const Draggable = function Draggable(
 
     return (
         <div
-            onMouseDown={(e) => {startDragging(e)}}
+            onMouseDown={(e) => {e.stopPropagation(); startDragging(e)}}
             onMouseUp={() => {stopDragging()}}
             className="bg-blue-300 w-full h-full"
         >

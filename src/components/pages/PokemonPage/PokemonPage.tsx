@@ -5,6 +5,7 @@ import { PageTemplate } from "@/components/templates/PageTemplate/PageTemplate";
 
 import { useState } from "react";
 import { PlayArea } from "@/components/organisms/PlayArea/PlayArea";
+import Button from "@/components/atoms/Button/Button";
 
 /**
  * Props = data and functions this component receives from its parent.
@@ -14,6 +15,7 @@ import { PlayArea } from "@/components/organisms/PlayArea/PlayArea";
 
 
 const PokemonPage = function PokemonPage() {
+  const [foodCount, setFoodCount] = useState(0);
   // useState: React re-renders this component whenever these values change.
   // The function form of the initial value runs once, so we don't remap the
   // array on every render.
@@ -22,6 +24,7 @@ const PokemonPage = function PokemonPage() {
     <PageTemplate>
       <div className="w-full h-full">
         <PlayArea/>
+        <Button onClick={() => setFoodCount((prev) => prev + 1)}><p>Food</p></Button>
       </div>
     </PageTemplate>
   );

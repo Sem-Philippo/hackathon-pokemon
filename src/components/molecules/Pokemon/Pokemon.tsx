@@ -15,6 +15,13 @@ type PokemonProps = {
 const Pokemon = function Pokemon({ maxX, maxY, floorY }: PokemonProps) {
     const minActionTime = 2000;
     const maxActionTime = 5000;
+
+    // No need to update the DOM every time hunger updates
+    const [hunger, setHunger] = useState(100);
+    const hungerTick = 1;
+    const maxHunger = 100;
+    const hungerTickSpeed = 1000;
+
     const [width, setWidth] = useState(100);
     const [height, setHeight] = useState(100);
     const adjMaxX = maxX - width;
@@ -82,7 +89,6 @@ const Pokemon = function Pokemon({ maxX, maxY, floorY }: PokemonProps) {
             let validAction = false;
             let action: PokemonAction = PokemonAction.Idle;
             while (!validAction) {
-                console.log(pokemonActions.length);
                 action = pokemonActions[Math.floor(Math.random() * pokemonActions.length)];
                 validAction = true;
                 // If the pokemon is already flying, don't fly again
@@ -94,15 +100,12 @@ const Pokemon = function Pokemon({ maxX, maxY, floorY }: PokemonProps) {
                     validAction = false;
                 }
             }
-            console.log(startedUp, initialResize);
             if (!startedUp.current) {
                 startedUp.current = true;
-                console.log("startup");
                 action = PokemonAction.Idle;
             }
             else if (!initialResize.current) {
                 initialResize.current = true;
-                console.log("resized");
                 action = PokemonAction.Idle;
             }
 
@@ -216,8 +219,6 @@ const Pokemon = function Pokemon({ maxX, maxY, floorY }: PokemonProps) {
                 }
             }
             if (position.current.y > floorY) {
-                console.log("below the floor");
-                console.log(floorY);
                 position.current.y = floorY;
                 setDisplayPosition(position.current);
             }
@@ -239,7 +240,14 @@ const Pokemon = function Pokemon({ maxX, maxY, floorY }: PokemonProps) {
         });
 
         resizeObserver.observe(pokemonRef.current as Element);
+
+        // Hunger loop
+        const intervalId = setInterval(() => setHunger(prev => Math.max(prev - hungerTick, 0)), hungerTickSpeed)
+
+        return () => clearInterval(intervalId);
     }, []);
+
+    useEffect(() => {console.log("hunger is now", hunger)}, [hunger]);
 
     return (
         <div 
