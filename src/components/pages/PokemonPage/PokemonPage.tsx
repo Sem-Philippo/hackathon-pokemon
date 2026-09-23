@@ -18,6 +18,8 @@ type PokemonPageProps = {
   pokemon: PokemonData[];
 };
 
+const showPokemonDebugInfo = false;
+
 const PokemonPage = function PokemonPage({ pokemon }: PokemonPageProps) {
   // useState: React re-renders this component whenever these values change.
   // The function form of the initial value runs once, so we don't remap the
@@ -26,7 +28,7 @@ const PokemonPage = function PokemonPage({ pokemon }: PokemonPageProps) {
   return (
     <PageTemplate>
       <div className="w-full h-full">
-        <PlayArea pokemon={pokemon}/>
+        <PlayArea pokemon={pokemon} showDebugInfo={showPokemonDebugInfo}/>
       </div>
     </PageTemplate>
   );

@@ -1,5 +1,6 @@
 type PokemonData = {
     id: number;
+    name: string;
     hp: number;
     atk: number;
     spAtk: number;
@@ -7,6 +8,7 @@ type PokemonData = {
     spDef: number;
     speed: number;
     weight: number;
+    types: string[];
     canFly: boolean;
 };
 

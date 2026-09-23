@@ -20,6 +20,7 @@ export async function listPokemon() {
     where: { id: { in: randomPokemonIds() } },
     select: {
       id: true,
+      name: true,
       hp: true,
       attack: true,
       specialAttack: true,
@@ -34,6 +35,7 @@ export async function listPokemon() {
 
   return pokemon.map((entry) => ({
     id: entry.id,
+    name: entry.name,
     hp: entry.hp ?? 0,
     atk: entry.attack ?? 0,
     spAtk: entry.specialAttack ?? 0,
@@ -41,6 +43,7 @@ export async function listPokemon() {
     spDef: entry.specialDefense ?? 0,
     speed: entry.speed ?? 0,
     weight: entry.weight ?? 0,
+    types: [entry.type1, entry.type2].filter((type): type is string => type !== null),
     canFly: entry.type1 === "flying" || entry.type2 === "flying",
   }));
 }

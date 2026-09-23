@@ -7,9 +7,10 @@ import { type PokemonData } from "@/components/types/Pokemon";
 
 type PlayAreaProps = {
   pokemon: PokemonData[];
+  showDebugInfo: boolean;
 };
 
-const PlayArea = function PlayArea({ pokemon }: PlayAreaProps) {
+const PlayArea = function PlayArea({ pokemon, showDebugInfo }: PlayAreaProps) {
     const [width, setWidth] = useState(100);
     const [height, setHeight] = useState(100);
 
@@ -25,7 +26,7 @@ const PlayArea = function PlayArea({ pokemon }: PlayAreaProps) {
 
   return (
     <div id="playArea"className="w-full h-full bg-amber-50 playArea">
-        {pokemon.map((data) => <Pokemon maxX={width} maxY={height} floorY={height - 50} data={data} key={data.id}/>)}
+        {pokemon.map((data) => <Pokemon maxX={width} maxY={height} floorY={height - 50} data={data} showDebugInfo={showDebugInfo} key={data.id}/>)}
     </div>
   );
 };

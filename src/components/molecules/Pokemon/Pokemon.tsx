@@ -11,9 +11,10 @@ type PokemonProps = {
     maxY: number;
     floorY: number;
     data: PokemonData;
+    showDebugInfo: boolean;
 };
 
-const Pokemon = function Pokemon({ maxX, maxY, floorY, data }: PokemonProps) {
+const Pokemon = function Pokemon({ maxX, maxY, floorY, data, showDebugInfo }: PokemonProps) {
     const minActionTime = 2000;
     const maxActionTime = 5000;
     const [width, setWidth] = useState(100);
@@ -245,6 +246,13 @@ const Pokemon = function Pokemon({ maxX, maxY, floorY, data }: PokemonProps) {
                 top: displayPosition.y,
             }}
         >
+            {showDebugInfo && (
+                <div className="pointer-events-none absolute bottom-full left-1/2 z-10 mb-1 -translate-x-1/2 whitespace-nowrap rounded bg-black/75 px-1.5 py-1 text-center text-[10px] leading-tight text-white">
+                    <div>{data.name} (#{data.id})</div>
+                    <div>Type: {data.types.join(" / ") || "unknown"}</div>
+                    <div>Facing: {facing}</div>
+                </div>
+            )}
             <Draggable 
                 maxX={adjMaxX} 
                 maxY={adjMaxY} 
