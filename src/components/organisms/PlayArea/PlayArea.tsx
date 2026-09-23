@@ -22,9 +22,7 @@ const PlayArea = function PlayArea({queuedItems, setQueuedItems}: PlayAreaProps)
 
     const [items, setItems] = useState<Item[]>([]);
 
-    crypto.randomUUID()
-
-    const pokemon = Array.from({length: 10}, (_, i) => i);
+    const pokemon = Array.from({length: 1}, (_, i) => i);
 
     function summonItem(event: React.MouseEvent) {
         const playAreaBounds = playAreaRef.current?.getBoundingClientRect();
@@ -57,10 +55,33 @@ const PlayArea = function PlayArea({queuedItems, setQueuedItems}: PlayAreaProps)
                 size: firstItem.size,
                 position: position,
                 uuid: crypto.randomUUID(),
+                wasUsed: false,
             }])
         }
         console.log(items);
         
+    }
+
+    function itemExists(itemNames: string | string[]) {
+        console.log(itemNames, items);
+        if (typeof itemNames === 'string') {
+            return items.filter((item) => item.name == itemNames).length >= 1;
+        }
+        
+        return items.filter((item) => item.name in itemNames).length >= 1;
+    }
+
+    function getItems(itemNames: string | string[]) {
+        console.log(itemNames, items);
+        if (typeof itemNames === 'string') {
+            return items.filter((item) => item.name == itemNames);
+        }
+        
+        return items.filter((item) => item.name in itemNames);
+    }
+
+    function deleteItem(item: Item) {
+        setItems((prev) => prev.filter((prevItem) => prevItem.uuid != item.uuid));
     }
 
     useEffect(() => {
@@ -76,7 +97,7 @@ const PlayArea = function PlayArea({queuedItems, setQueuedItems}: PlayAreaProps)
 
   return (
     <div className="w-full h-full bg-amber-50 playArea" onMouseDown={summonItem} ref={playAreaRef}>
-        {pokemon.map((i) => <Pokemon maxX={width} maxY={height} floorY={floorY} key={i}/>)}
+        {pokemon.map((i) => <Pokemon maxX={width} maxY={height} floorY={floorY} itemExists={itemExists} getItems={getItems} deleteItem={deleteItem} key={i}/>)}
         {items.map((item) => <GameItem maxX={width} maxY={height} floorY={floorY} key={item.uuid} itemData={item}/>)}
     </div>
   );

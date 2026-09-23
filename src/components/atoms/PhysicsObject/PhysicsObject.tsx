@@ -14,7 +14,7 @@ type PhysicsObjectProps = {
     weight: number;
     hasGravity: boolean;
     position: React.RefObject<Position>;    
-    setDisplayPosition: React.Dispatch<React.SetStateAction<Position>>;
+    setDisplayPosition: (position: Position) => void;
     targetPosition: React.RefObject<Position>;
 };
 
@@ -87,7 +87,7 @@ const PhysicsObject = function PhysicsObject(
         return () => {
             cancelAnimationFrame(animationFrame);
         };
-    }, [moveSpeed, weight, physicsPaused, floorY]);
+    }, [moveSpeed, weight, physicsPaused, floorY, setDisplayPosition]);
 
 
     return (

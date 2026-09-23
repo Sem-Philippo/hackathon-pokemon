@@ -6,7 +6,7 @@ import { PageTemplate } from "@/components/templates/PageTemplate/PageTemplate";
 import { useState } from "react";
 import { PlayArea } from "@/components/organisms/PlayArea/PlayArea";
 import Button from "@/components/atoms/Button/Button";
-import { type QueuedItem, ItemType } from "@/components/types/Items";
+import { type QueuedItem, FoodItem, ItemType } from "@/components/types/Items";
 
 /**
  * Props = data and functions this component receives from its parent.
@@ -20,12 +20,12 @@ const PokemonPage = function PokemonPage() {
 
   const foodItems: QueuedItem[] = 
   [{
-    name: "Sitrus berry",
+    name: FoodItem[FoodItem.Sitrus_Berry].toString(),
     type: ItemType.food,
     size: {width: 40, height: 40}
   },
   {
-    name: "Oran berry",
+    name: FoodItem[FoodItem.Oran_Berry].toString(),
     type: ItemType.food,
     size: {width: 40, height: 40}
   }]
@@ -37,7 +37,7 @@ const PokemonPage = function PokemonPage() {
     <PageTemplate>
       <div className="w-full h-full">
         <PlayArea queuedItems={queuedItems} setQueuedItems={setQueuedItems}/>
-        {foodItems.map((item, index) => <Button key={item.name} onClick={() => setQueuedItems((prev) => [...prev, foodItems[index]])}><p>{item.name}</p></Button>)}
+        {foodItems.map((item, index) => <Button key={item.name} onClick={() => setQueuedItems((prev) => [...prev, foodItems[index]])}><p>{item.name.replace("_", " ")}</p></Button>)}
       </div>
     </PageTemplate>
   );

@@ -5,24 +5,31 @@ import { type Position } from "@/components/types/Draggable";
 import { PokemonAction, type PokemonData } from "@/components/types/Pokemon";
 import "@/components/molecules/Pokemon/Pokemon.css";
 import { Draggable } from "@/components/atoms/Draggable/Draggable";
+import PhysicsObject from "@/components/atoms/PhysicsObject/PhysicsObject";
+import { FoodItem, Item, ItemType } from "@/components/types/Items";
 
 type PokemonProps = {
     maxX: number;
     maxY: number;
     floorY: number;
+    itemExists: (itemNames: string | string[]) => boolean;
+    getItems: (itemNames: string | string[]) => Item[];
+    deleteItem: (item: Item) => void;
 };
 
-const Pokemon = function Pokemon({ maxX, maxY, floorY }: PokemonProps) {
+const Pokemon = function Pokemon({ maxX, maxY, floorY, itemExists, getItems, deleteItem }: PokemonProps) {
     const minActionTime = 2000;
     const maxActionTime = 5000;
 
-    const pokemonDebug = false;
+    const pokemonDebug = true;
 
     // No need to update the DOM every time hunger updates
-    const [hunger, setHunger] = useState(100);
+    const [hunger, setHunger] = useState(50);
     const hungerTick = 1;
     const maxHunger = 100;
     const hungerTickSpeed = 1000;
+
+    const interactDistance = 10;
 
     const [width, setWidth] = useState(100);
     const [height, setHeight] = useState(100);
@@ -39,10 +46,18 @@ const Pokemon = function Pokemon({ maxX, maxY, floorY }: PokemonProps) {
         speed: 255,
         weight: 100,
         canFly: true,
+        likedFood: FoodItem.Sitrus_Berry,
+        dislikedFood: FoodItem.Oran_Berry,
+        name: crypto.randomUUID(),
     });
+
+    const [claimedItem, setClaimedItem] = useState<Item>();
 
     const startedUp = useRef<boolean>(false);
     const initialResize = useRef<boolean>(false);
+
+    const neutralFoodsObject = Object.values(FoodItem).filter((value) => typeof value == 'number' && value !== data.likedFood && value !== data.dislikedFood);
+    const neutralFoods = neutralFoodsObject.map((value: string | FoodItem) => {if (typeof value == 'number') {return FoodItem[value]}})
 
     const pokemonActions = [
     PokemonAction.Move,
@@ -53,6 +68,12 @@ const Pokemon = function Pokemon({ maxX, maxY, floorY }: PokemonProps) {
             PokemonAction.Landing,
         ]
         : []),
+    ...(hunger <= maxHunger * 0.75 && itemExists(FoodItem[data.likedFood]) && !claimedItem ? [
+        PokemonAction.SlightlyHungry,
+    ] : []),
+    ...(hunger <= maxHunger * 0.5 && itemExists(neutralFoods) && !claimedItem ? [
+        PokemonAction.Hungry,
+    ] : []),
 ];
 
     const [isDragging, setIsDragging] = useState(false);
@@ -125,10 +146,11 @@ const Pokemon = function Pokemon({ maxX, maxY, floorY }: PokemonProps) {
                     case PokemonAction.Landing:
                         console.log("Pokemon is landing");
                         break;
+                    case PokemonAction.SlightlyHungry:
+                        console.log("Pokemon is slightly hungry");
+                        break;
                 }
             }
-            
-
             
             if (action === PokemonAction.Move || action === PokemonAction.Flying || action === PokemonAction.Landing) {
                 const newX = Math.floor(Math.random() * (maxX - width));
@@ -153,6 +175,20 @@ const Pokemon = function Pokemon({ maxX, maxY, floorY }: PokemonProps) {
                 if (!data.canFly) {
                     targetPosition.current.y = floorY;
                 }
+            }
+            else if (action === PokemonAction.SlightlyHungry) {
+                const likedFoodItems = getItems(FoodItem[data.likedFood]);
+
+                likedFoodItems.forEach(item => {
+                    if (!item.claimedBy) {
+                        item.claimedBy = data.name;
+                        console.log("item claimed by", item.claimedBy);
+
+                        setClaimedItem(item);
+
+                        targetPosition.current = item.position;
+                    }
+                });
             }
 
             if (pokemonDebug) {
@@ -187,61 +223,7 @@ const Pokemon = function Pokemon({ maxX, maxY, floorY }: PokemonProps) {
         return () => {
             clearTimeout(timeoutId.current);
         };
-    }, [maxX, maxY, isDragging]);
-
-    // Movement loop
-    useEffect(() => {
-        let animationFrame: number;
-        let lastTime = performance.now();
-
-        function movePokemon(currentTime: number) {
-            const deltaTime = (currentTime - lastTime) / 1000;
-            lastTime = currentTime;
-
-            if (!isDragging) {
-
-                const currentPosition = position.current;
-                const target = targetPosition.current;
-
-                const dx = target.x - currentPosition.x;
-                const dy = target.y - currentPosition.y;
-
-                const distance = Math.hypot(dx, dy);
-
-                if (distance > 0) {
-                    const movement = data.speed * deltaTime;
-                    const weightReduction = data.weight * deltaTime;
-                    if (distance <= movement) {
-                        position.current = {
-                            x: target.x,
-                            y: target.y,
-                        };
-                    } else {
-                        position.current = {
-                            x: currentPosition.x + (dx / distance) * movement,
-                            y: dy < 0 ? 
-                            currentPosition.y + (dy / distance) * (movement - weightReduction) : // Move slower upwards
-                            currentPosition.y + (dy / distance) * (2 * movement + weightReduction), // Move quicker downwards
-                        };
-                    }
-
-                    setDisplayPosition(position.current);
-                }
-            }
-            if (position.current.y > floorY) {
-                position.current.y = floorY;
-                setDisplayPosition(position.current);
-            }
-
-            animationFrame = requestAnimationFrame(movePokemon);
-        }
-
-        animationFrame = requestAnimationFrame(movePokemon);
-
-        return () => {
-            cancelAnimationFrame(animationFrame);
-        };
-    }, [data.speed, isDragging, floorY]);
+    }, [maxX, maxY, isDragging, pokemonActions]);
 
     useEffect(() => {
         const resizeObserver = new ResizeObserver((event) => {
@@ -259,6 +241,55 @@ const Pokemon = function Pokemon({ maxX, maxY, floorY }: PokemonProps) {
 
     useEffect(() => {if (pokemonDebug) {console.log("hunger is now", hunger)}}, [hunger]);
 
+    function updatePosition(position: Position) {
+        setDisplayPosition(position);
+
+        checkItemOverlap(position);
+    }
+
+    function checkItemOverlap(position: Position) {
+        if (!claimedItem) {
+            // No item to check overlap for
+            return; 
+        }
+
+        const dx = Math.abs((claimedItem.position.x + claimedItem.size.width / 2) - (position.x + width / 2)) - claimedItem.size.width / 2 - width / 2;
+        const dy = Math.abs((claimedItem.position.y + claimedItem.size.height / 2) - (position.y + height / 2)) - claimedItem.size.height / 2 - height / 2;
+
+        console.log(dx, dy);
+
+
+        if (dx < 0 && dy < 0) {
+            consumeItem(claimedItem);
+        }
+    }
+
+    useEffect(() => console.log(claimedItem), [claimedItem]);
+
+    function consumeItem(item: Item) {
+        // remove from array
+        // Do stuff based on item type
+        if (!item.wasUsed) {
+            switch (item.type) {
+                case ItemType.food:
+                    setHunger((prev) => prev + maxHunger * 0.2);
+                    break;
+                case ItemType.heldItem:
+                    // Equip item logic
+                    break;
+                case ItemType.evolutionItem:
+                    // evolve logic
+                    break;
+            }
+        }
+        
+        deleteItem(item);
+
+        item.wasUsed = true;
+
+        setClaimedItem(undefined);
+    }
+
     return (
         <div 
             className="w-10 h-10 pokemon" 
@@ -268,18 +299,29 @@ const Pokemon = function Pokemon({ maxX, maxY, floorY }: PokemonProps) {
                 top: displayPosition.y,
             }}
         >
-            <Draggable 
+            <PhysicsObject
+                floorY={floorY}
+                physicsPaused={isDragging}
+                moveSpeed={data.speed}
+                weight={200}
+                hasGravity={!data.canFly}
+                position={position}
+                setDisplayPosition={updatePosition}
+                targetPosition={targetPosition}
+            >
+                <Draggable 
                 maxX={adjMaxX} 
                 maxY={adjMaxY} 
-                setDisplayPosition={setDisplayPosition} 
+                setDisplayPosition={updatePosition} 
                 isDragging={isDragging} 
                 setIsDragging={setIsDragging} 
                 position={position} 
                 onStop={stopDragging}>
-                <div
-                    className="bg-red-500 w-full h-full"
-                />
-            </Draggable>
+                    <div
+                        className="bg-red-500 w-full h-full"
+                    />
+                </Draggable>
+            </PhysicsObject>
         </div>
         
     );

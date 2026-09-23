@@ -8,7 +8,7 @@ type DraggableProps = {
     maxX: number;
     maxY: number;
     children: React.ReactNode;
-    setDisplayPosition: React.Dispatch<React.SetStateAction<Position>>;
+    setDisplayPosition: (position: Position) => void;
     isDragging: boolean;
     setIsDragging: React.Dispatch<React.SetStateAction<boolean>>;
     position: React.RefObject<Position>;
