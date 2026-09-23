@@ -6,10 +6,7 @@
  */
 
 // server side, DB code and actions
-import { createTodo } from "@/actions/todo/createTodo/createTodo";
-import { deleteTodo } from "@/actions/todo/deleteTodo/deleteTodo";
-import { listTodos } from "@/actions/todo/listTodos/listTodos";
-import { updateTodo } from "@/actions/todo/updateTodo/updateTodo";
+import { listPokemon } from "@/actions/pokemon/listPokemon/listPokemon";
 
 // the main client component
 import { PokemonPage } from "@/components/pages/PokemonPage/PokemonPage";
@@ -18,10 +15,11 @@ import { PokemonPage } from "@/components/pages/PokemonPage/PokemonPage";
 export const dynamic = "force-dynamic";
 
 export default async function Home() {
-  const initialTodos = await listTodos();
+  const pokemon = await listPokemon();
   // main client component with server side actions passed as props
   return (
     <PokemonPage
+      pokemon={pokemon}
     />
   );
 }

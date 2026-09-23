@@ -3,12 +3,15 @@
 import Pokemon from "@/components/molecules/Pokemon/Pokemon";
 import "@/components/organisms/PlayArea/PlayArea.css";
 import { useEffect, useRef, useState } from "react";
+import { type PokemonData } from "@/components/types/Pokemon";
 
-const PlayArea = function PlayArea() {
+type PlayAreaProps = {
+  pokemon: PokemonData[];
+};
+
+const PlayArea = function PlayArea({ pokemon }: PlayAreaProps) {
     const [width, setWidth] = useState(100);
     const [height, setHeight] = useState(100);
-
-    const pokemon = Array.from({length: 10}, (_, i) => i);
 
     useEffect(() => {
         const resizeObserver = new ResizeObserver((event) => {
@@ -22,7 +25,7 @@ const PlayArea = function PlayArea() {
 
   return (
     <div id="playArea"className="w-full h-full bg-amber-50 playArea">
-        {pokemon.map((i) => <Pokemon maxX={width} maxY={height} floorY={height - 50} key={i}/>)}
+        {pokemon.map((data) => <Pokemon maxX={width} maxY={height} floorY={height - 50} data={data} key={data.id}/>)}
     </div>
   );
 };

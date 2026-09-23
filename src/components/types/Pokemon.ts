@@ -1,4 +1,5 @@
 type PokemonData = {
+    id: number;
     hp: number;
     atk: number;
     spAtk: number;
@@ -9,6 +10,8 @@ type PokemonData = {
     canFly: boolean;
 };
 
+type PokemonFacing = "left" | "right";
+
 const enum PokemonAction {
     None,
     Move,
@@ -17,4 +20,4 @@ const enum PokemonAction {
     Landing,
 }
 
-export { PokemonAction, type PokemonData };
+export { PokemonAction, type PokemonData, type PokemonFacing };

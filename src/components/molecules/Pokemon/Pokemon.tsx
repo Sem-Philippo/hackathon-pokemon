@@ -2,7 +2,7 @@
 
 import { useEffect, useRef, useState } from "react";
 import { type Position } from "@/components/types/Draggable";
-import { PokemonAction, type PokemonData } from "@/components/types/Pokemon";
+import { PokemonAction, type PokemonData, type PokemonFacing } from "@/components/types/Pokemon";
 import "@/components/molecules/Pokemon/Pokemon.css";
 import { Draggable } from "@/components/atoms/Draggable/Draggable";
 
@@ -10,9 +10,10 @@ type PokemonProps = {
     maxX: number;
     maxY: number;
     floorY: number;
+    data: PokemonData;
 };
 
-const Pokemon = function Pokemon({ maxX, maxY, floorY }: PokemonProps) {
+const Pokemon = function Pokemon({ maxX, maxY, floorY, data }: PokemonProps) {
     const minActionTime = 2000;
     const maxActionTime = 5000;
     const [width, setWidth] = useState(100);
@@ -21,16 +22,7 @@ const Pokemon = function Pokemon({ maxX, maxY, floorY }: PokemonProps) {
     const adjMaxY = maxY - height;
     const pokemonRef = useRef<HTMLDivElement>(null);
     const [currentAction, setCurrentAction] = useState<PokemonAction>(PokemonAction.None);
-    const [data] = useState<PokemonData>({
-        hp: 100,
-        atk: 10,
-        spAtk: 10,
-        def: 10,
-        spDef: 10,
-        speed: 255,
-        weight: 100,
-        canFly: true,
-    });
+    const [facing, setFacing] = useState<PokemonFacing>("right");
 
     const startedUp = useRef<boolean>(false);
     const initialResize = useRef<boolean>(false);
@@ -196,6 +188,7 @@ const Pokemon = function Pokemon({ maxX, maxY, floorY }: PokemonProps) {
                 const distance = Math.hypot(dx, dy);
 
                 if (distance > 0) {
+                    setFacing(dx < 0 ? "left" : "right");
                     const movement = data.speed * deltaTime;
                     const weightReduction = data.weight * deltaTime;
                     if (distance <= movement) {
@@ -245,6 +238,8 @@ const Pokemon = function Pokemon({ maxX, maxY, floorY }: PokemonProps) {
         <div 
             className="w-10 h-10 pokemon" 
             ref={pokemonRef} 
+            data-facing={facing}
+            data-pokemon-id={data.id}
             style={{
                 left: displayPosition.x,
                 top: displayPosition.y,
@@ -257,7 +252,12 @@ const Pokemon = function Pokemon({ maxX, maxY, floorY }: PokemonProps) {
                 isDragging={isDragging} 
                 setIsDragging={setIsDragging} 
                 position={position} 
-                onStop={stopDragging}>
+                onStop={stopDragging}
+                onMove={(nextPosition, previousPosition) => {
+                    if (nextPosition.x !== previousPosition.x) {
+                        setFacing(nextPosition.x < previousPosition.x ? "left" : "right");
+                    }
+                }}>
                 <div
                     className="bg-red-500 w-full h-full"
                 />
