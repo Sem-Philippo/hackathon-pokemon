@@ -101,10 +101,14 @@ const Pokemon = function Pokemon({ maxX, maxY, floorY, itemExists, getItems, del
             return;
         }
 
+        const isAirborne = data.canFly && position.current.y < floorY;
         const animationState =
-            currentAction === PokemonAction.Move ? "walk" :
-            currentAction === PokemonAction.Idle ? "idle" :
-            currentAction === PokemonAction.Flying || currentAction === PokemonAction.Landing ? "fly" :
+            currentActionState === PokemonAction.Idle ? "idle" :
+            currentActionState === PokemonAction.Flying || currentActionState === PokemonAction.Landing ? "fly" :
+            currentActionState === PokemonAction.Move ||
+            currentActionState === PokemonAction.SlightlyHungry ||
+            currentActionState === PokemonAction.Hungry ||
+            currentActionState === PokemonAction.Starving ? (isAirborne ? "fly" : "walk") :
             null;
 
         if (!animationState) {
@@ -116,7 +120,7 @@ const Pokemon = function Pokemon({ maxX, maxY, floorY, itemExists, getItems, del
         }
 
         const nextAnimation = animationControllerRef.current.startAnimation(animationState, {
-            loop: currentAction !== PokemonAction.Idle,
+            loop: currentActionState !== PokemonAction.Idle,
             idleChance: 0.2,
         });
 
@@ -124,7 +128,7 @@ const Pokemon = function Pokemon({ maxX, maxY, floorY, itemExists, getItems, del
             setCurrentAnimation(nextAnimation);
             setAnimationFrame(0);
         }
-    }, [currentAction, isDragging]);
+    }, [currentActionState, data.canFly, floorY, isDragging]);
 
     useEffect(() => {
         let cancelled = false;
@@ -469,6 +473,17 @@ const Pokemon = function Pokemon({ maxX, maxY, floorY, itemExists, getItems, del
         setHasClaimed(false);
     }
 
+    function handleMovementComplete() {
+        if (data.canFly && targetPosition.current.y < floorY) {
+            currentAction.current = PokemonAction.Flying;
+            setCurrentActionState(PokemonAction.Flying);
+            return;
+        }
+
+        currentAction.current = PokemonAction.Idle;
+        setCurrentActionState(PokemonAction.Idle);
+    }
+
     const spriteWidth = spriteMeta?.frameWidth ?? 32;
     const spriteHeight = spriteMeta?.frameHeight ?? 32;
     const spriteFrames = spriteMeta?.frameCount ?? 1;
@@ -506,7 +521,7 @@ const Pokemon = function Pokemon({ maxX, maxY, floorY, itemExists, getItems, del
                 position={position}
                 updatePosition={updatePosition}
                 targetPosition={targetPosition}
-                onMovementComplete={() => {currentAction.current = PokemonAction.Idle; setCurrentActionState(PokemonAction.Idle);}}
+                onMovementComplete={handleMovementComplete}
             >
                 {showDebugInfo && (
                 <div className="pointer-events-none absolute bottom-full left-1/2 z-10 mb-1 -translate-x-1/2 whitespace-nowrap rounded bg-black/75 px-1.5 py-1 text-center text-[10px] leading-tight text-white">
