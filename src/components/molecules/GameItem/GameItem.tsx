@@ -12,9 +12,10 @@ type GameItemProps = {
     maxY: number;
     floorY: number;
     itemData: Item;
+    changePosition: (uuid: string, position: Position) => void;
 };
 
-const GameItem = function GameItem({ maxX, maxY, floorY, itemData }: GameItemProps) {
+const GameItem = function GameItem({ maxX, maxY, floorY, itemData, changePosition }: GameItemProps) {
 
     const [width, setWidth] = useState(itemData.size.width);
     const [height, setHeight] = useState(itemData.size.height);
@@ -46,6 +47,12 @@ const GameItem = function GameItem({ maxX, maxY, floorY, itemData }: GameItemPro
         y: itemData.position.y,
     });
 
+    function updatePosition(position: Position) {
+        setDisplayPosition(position);
+
+        changePosition(itemData.uuid, position);
+    }
+
     return (
         <div 
             className="item" 
@@ -64,7 +71,7 @@ const GameItem = function GameItem({ maxX, maxY, floorY, itemData }: GameItemPro
                 weight={200}
                 hasGravity
                 position={position}
-                setDisplayPosition={setDisplayPosition}
+                updatePosition={updatePosition}
                 targetPosition={targetPosition}
             >
                 <Draggable 

@@ -63,12 +63,11 @@ const PlayArea = function PlayArea({queuedItems, setQueuedItems}: PlayAreaProps)
     }
 
     function itemExists(itemNames: string | string[]) {
-        console.log(itemNames, items);
         if (typeof itemNames === 'string') {
             return items.filter((item) => item.name == itemNames).length >= 1;
         }
         
-        return items.filter((item) => item.name in itemNames).length >= 1;
+        return items.filter((item) => itemNames.includes(item.name)).length >= 1;
     }
 
     function getItems(itemNames: string | string[]) {
@@ -77,11 +76,21 @@ const PlayArea = function PlayArea({queuedItems, setQueuedItems}: PlayAreaProps)
             return items.filter((item) => item.name == itemNames);
         }
         
-        return items.filter((item) => item.name in itemNames);
+        return items.filter((item) => itemNames.includes(item.name));
     }
 
     function deleteItem(item: Item) {
         setItems((prev) => prev.filter((prevItem) => prevItem.uuid != item.uuid));
+    }
+
+    function changeItemPosition(uuid: string, newPosition: Position) {
+        const targetItem = items.filter((item) => item.uuid === uuid).at(0);
+
+        if (!targetItem) {
+            return;
+        }
+
+        targetItem.position = newPosition;
     }
 
     useEffect(() => {
@@ -98,7 +107,7 @@ const PlayArea = function PlayArea({queuedItems, setQueuedItems}: PlayAreaProps)
   return (
     <div className="w-full h-full bg-amber-50 playArea" onMouseDown={summonItem} ref={playAreaRef}>
         {pokemon.map((i) => <Pokemon maxX={width} maxY={height} floorY={floorY} itemExists={itemExists} getItems={getItems} deleteItem={deleteItem} key={i}/>)}
-        {items.map((item) => <GameItem maxX={width} maxY={height} floorY={floorY} key={item.uuid} itemData={item}/>)}
+        {items.map((item) => <GameItem maxX={width} maxY={height} floorY={floorY} key={item.uuid} itemData={item} changePosition={changeItemPosition}/>)}
     </div>
   );
 };

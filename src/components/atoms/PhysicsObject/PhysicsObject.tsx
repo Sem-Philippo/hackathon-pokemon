@@ -5,6 +5,7 @@ import { type Position } from "@/components/types/Draggable";
 import { PokemonAction, type PokemonData } from "@/components/types/Pokemon";
 import "@/components/molecules/Pokemon/Pokemon.css";
 import { Draggable } from "@/components/atoms/Draggable/Draggable";
+import { Item } from "@/components/types/Items";
 
 type PhysicsObjectProps = {
     floorY: number;
@@ -14,7 +15,7 @@ type PhysicsObjectProps = {
     weight: number;
     hasGravity: boolean;
     position: React.RefObject<Position>;    
-    setDisplayPosition: (position: Position) => void;
+    updatePosition: (position: Position) => void;
     targetPosition: React.RefObject<Position>;
 };
 
@@ -26,7 +27,7 @@ const PhysicsObject = function PhysicsObject(
         physicsPaused = false,
         moveSpeed = 0,
         weight = 100,
-        setDisplayPosition, 
+        updatePosition, 
         position, 
         targetPosition,
     }: PhysicsObjectProps) {
@@ -57,13 +58,14 @@ const PhysicsObject = function PhysicsObject(
                 if (distance > 0) {
                     const movement = moveSpeed * deltaTime;
                     const weightReduction = weight * deltaTime;
+                    let newPosition: Position = {x:0, y: 0}
                     if (distance <= movement) {
-                        position.current = {
+                        newPosition = {
                             x: target.x,
                             y: target.y,
                         };
                     } else {
-                        position.current = {
+                        newPosition = {
                             x: currentPosition.x + (dx / distance) * movement,
                             y: dy < 0 ? 
                             currentPosition.y + (dy / distance) * (movement - weightReduction) : // Move slower upwards
@@ -71,12 +73,14 @@ const PhysicsObject = function PhysicsObject(
                         };
                     }
 
-                    setDisplayPosition(position.current);
+                    position.current = newPosition;
+
+                    updatePosition(position.current);
                 }
             }
             if (position.current.y > floorY) {
                 position.current.y = floorY;
-                setDisplayPosition(position.current);
+                updatePosition(position.current);
             }
 
             animationFrame = requestAnimationFrame(moveObject);
@@ -87,7 +91,7 @@ const PhysicsObject = function PhysicsObject(
         return () => {
             cancelAnimationFrame(animationFrame);
         };
-    }, [moveSpeed, weight, physicsPaused, floorY, setDisplayPosition]);
+    }, [moveSpeed, weight, physicsPaused, floorY, updatePosition]);
 
 
     return (

@@ -51,13 +51,20 @@ const Pokemon = function Pokemon({ maxX, maxY, floorY, itemExists, getItems, del
         name: crypto.randomUUID(),
     });
 
-    const [claimedItem, setClaimedItem] = useState<Item>();
+    const claimedItem = useRef<Item>(null);
+    const [hasClaimed, setHasClaimed] = useState(false);
 
     const startedUp = useRef<boolean>(false);
     const initialResize = useRef<boolean>(false);
 
-    const neutralFoodsObject = Object.values(FoodItem).filter((value) => typeof value == 'number' && value !== data.likedFood && value !== data.dislikedFood);
-    const neutralFoods = neutralFoodsObject.map((value: string | FoodItem) => {if (typeof value == 'number') {return FoodItem[value]}})
+    const neutralFoods = Object.values(FoodItem)
+    .filter(
+        (value): value is FoodItem =>
+            typeof value === "number" &&
+            value !== data.likedFood &&
+            value !== data.dislikedFood
+    )
+    .map(value => FoodItem[value]);
 
     const pokemonActions = [
     PokemonAction.Move,
@@ -68,11 +75,14 @@ const Pokemon = function Pokemon({ maxX, maxY, floorY, itemExists, getItems, del
             PokemonAction.Landing,
         ]
         : []),
-    ...(hunger <= maxHunger * 0.75 && itemExists(FoodItem[data.likedFood]) && !claimedItem ? [
-        PokemonAction.SlightlyHungry,
+    ...(hunger <= maxHunger * 0.75 && itemExists(FoodItem[data.likedFood]) && !hasClaimed ? [
+        PokemonAction.SlightlyHungry,PokemonAction.SlightlyHungry,PokemonAction.SlightlyHungry,PokemonAction.SlightlyHungry,PokemonAction.SlightlyHungry
     ] : []),
-    ...(hunger <= maxHunger * 0.5 && itemExists(neutralFoods) && !claimedItem ? [
+    ...(hunger <= maxHunger * 0.5 && itemExists([FoodItem[data.likedFood], ...neutralFoods]) && !hasClaimed ? [
         PokemonAction.Hungry,
+    ] : []),
+    ...(hunger <= maxHunger * 0.2 && itemExists([FoodItem[data.likedFood], ...neutralFoods, FoodItem[data.dislikedFood]]) && !hasClaimed ? [
+        PokemonAction.Starving,
     ] : []),
 ];
 
@@ -149,6 +159,12 @@ const Pokemon = function Pokemon({ maxX, maxY, floorY, itemExists, getItems, del
                     case PokemonAction.SlightlyHungry:
                         console.log("Pokemon is slightly hungry");
                         break;
+                    case PokemonAction.Hungry:
+                        console.log("Pokemon is hungry");
+                        break;
+                    case PokemonAction.Starving:
+                        console.log("Pokemon is starving");
+                        break;
                 }
             }
             
@@ -177,6 +193,7 @@ const Pokemon = function Pokemon({ maxX, maxY, floorY, itemExists, getItems, del
                 }
             }
             else if (action === PokemonAction.SlightlyHungry) {
+                console.log("trying to claim");
                 const likedFoodItems = getItems(FoodItem[data.likedFood]);
 
                 likedFoodItems.forEach(item => {
@@ -184,7 +201,44 @@ const Pokemon = function Pokemon({ maxX, maxY, floorY, itemExists, getItems, del
                         item.claimedBy = data.name;
                         console.log("item claimed by", item.claimedBy);
 
-                        setClaimedItem(item);
+                        claimedItem.current = item;
+                        setHasClaimed(true);
+
+                        targetPosition.current = item.position;
+                        return;
+                    }
+                });
+            }
+            else if (action === PokemonAction.Hungry) {
+                const foodItems = getItems([FoodItem[data.likedFood], ...neutralFoods]);
+
+                foodItems.forEach(item => {
+                    if (!item.claimedBy) {
+                        console.log("test");
+                        item.claimedBy = data.name;
+                        console.log("item claimed by", item.claimedBy);
+
+                        claimedItem.current = item;
+                        setHasClaimed(true);
+
+                        targetPosition.current = item.position;
+                        return;
+                    }
+                    else {
+                        console.log("can't claim");
+                    }
+                });
+            }
+            else if (action === PokemonAction.Starving) {
+                const foodItems = getItems([FoodItem[data.likedFood], ...neutralFoods, FoodItem[data.dislikedFood]]);
+
+                foodItems.forEach(item => {
+                    if (!item.claimedBy) {
+                        item.claimedBy = data.name;
+                        console.log("item claimed by", item.claimedBy);
+
+                        claimedItem.current = item;
+                        setHasClaimed(true);
 
                         targetPosition.current = item.position;
                     }
@@ -223,7 +277,7 @@ const Pokemon = function Pokemon({ maxX, maxY, floorY, itemExists, getItems, del
         return () => {
             clearTimeout(timeoutId.current);
         };
-    }, [maxX, maxY, isDragging, pokemonActions]);
+    }, [maxX, maxY, isDragging, getItems, pokemonActions]);
 
     useEffect(() => {
         const resizeObserver = new ResizeObserver((event) => {
@@ -248,19 +302,16 @@ const Pokemon = function Pokemon({ maxX, maxY, floorY, itemExists, getItems, del
     }
 
     function checkItemOverlap(position: Position) {
-        if (!claimedItem) {
+        if (!claimedItem.current) {
             // No item to check overlap for
             return; 
         }
 
-        const dx = Math.abs((claimedItem.position.x + claimedItem.size.width / 2) - (position.x + width / 2)) - claimedItem.size.width / 2 - width / 2;
-        const dy = Math.abs((claimedItem.position.y + claimedItem.size.height / 2) - (position.y + height / 2)) - claimedItem.size.height / 2 - height / 2;
-
-        console.log(dx, dy);
-
+        const dx = Math.abs((claimedItem.current.position.x + claimedItem.current.size.width / 2) - (position.x + width / 2)) - claimedItem.current.size.width / 2 - width / 2;
+        const dy = Math.abs((claimedItem.current.position.y + claimedItem.current.size.height / 2) - (position.y + height / 2)) - claimedItem.current.size.height / 2 - height / 2;
 
         if (dx < 0 && dy < 0) {
-            consumeItem(claimedItem);
+            consumeItem(claimedItem.current);
         }
     }
 
@@ -287,7 +338,8 @@ const Pokemon = function Pokemon({ maxX, maxY, floorY, itemExists, getItems, del
 
         item.wasUsed = true;
 
-        setClaimedItem(undefined);
+        claimedItem.current = null;
+        setHasClaimed(false);
     }
 
     return (
@@ -306,7 +358,7 @@ const Pokemon = function Pokemon({ maxX, maxY, floorY, itemExists, getItems, del
                 weight={200}
                 hasGravity={!data.canFly}
                 position={position}
-                setDisplayPosition={updatePosition}
+                updatePosition={updatePosition}
                 targetPosition={targetPosition}
             >
                 <Draggable 
