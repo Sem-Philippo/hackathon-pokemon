@@ -4,7 +4,7 @@ import { ItemType } from "@/components/types/Items";
 
 const shopItems: ShopItem[] = [
   {
-    id: "oran-berry",
+    id: "oran_berry",
     label: "Oran Berry",
     cost: 25,
     icon: "🍊",
@@ -15,7 +15,7 @@ const shopItems: ShopItem[] = [
     },
   },
   {
-    id: "sitrus-berry",
+    id: "sitrus_berry",
     label: "Sitrus Berry",
     cost: 40,
     icon: "🍋",
