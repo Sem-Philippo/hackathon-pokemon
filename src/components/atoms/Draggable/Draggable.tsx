@@ -79,7 +79,8 @@ const Draggable = function Draggable(
         <div
             onMouseDown={(e) => {startDragging(e)}}
             onMouseUp={() => {stopDragging()}}
-            className="bg-blue-300 w-full h-full"
+            className="w-full h-full"
+            style={{ background: "transparent" }}
         >
             {children}
         </div>

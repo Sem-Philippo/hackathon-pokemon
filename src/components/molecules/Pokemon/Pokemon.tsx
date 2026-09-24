@@ -3,6 +3,7 @@
 import { useEffect, useRef, useState } from "react";
 import { type Position } from "@/components/types/Draggable";
 import { PokemonAction, type PokemonData, type PokemonFacing } from "@/components/types/Pokemon";
+import { createPokemonAnimationObject, getPokemonAnimationFrameStyle } from "@/lib/pokemonAnimations";
 import "@/components/molecules/Pokemon/Pokemon.css";
 import { Draggable } from "@/components/atoms/Draggable/Draggable";
 
@@ -22,8 +23,12 @@ const Pokemon = function Pokemon({ maxX, maxY, floorY, data, showDebugInfo }: Po
     const adjMaxX = maxX - width;
     const adjMaxY = maxY - height;
     const pokemonRef = useRef<HTMLDivElement>(null);
+    const animationControllerRef = useRef(createPokemonAnimationObject());
     const [currentAction, setCurrentAction] = useState<PokemonAction>(PokemonAction.None);
+    const [currentAnimation, setCurrentAnimation] = useState<string | null>("Idle");
+    const [animationFrame, setAnimationFrame] = useState(0);
     const [facing, setFacing] = useState<PokemonFacing>("right");
+    const [spriteMeta, setSpriteMeta] = useState<{ frameWidth: number; frameHeight: number; frameCount: number; durations: number[]; sheetRows: number; sheetColumns: number } | null>(null);
 
     const startedUp = useRef<boolean>(false);
     const initialResize = useRef<boolean>(false);
@@ -43,6 +48,124 @@ const Pokemon = function Pokemon({ maxX, maxY, floorY, data, showDebugInfo }: Po
     const wasDragging = useRef<boolean>(false);
 
     const timeoutId = useRef<ReturnType<typeof setTimeout>>(undefined);
+
+    useEffect(() => {
+        if (isDragging) {
+            const pausedAnimation = animationControllerRef.current.pauseAnimation();
+            if (pausedAnimation) {
+                setCurrentAnimation(pausedAnimation);
+            }
+            return;
+        }
+
+        const animationState =
+            currentAction === PokemonAction.Move ? "walk" :
+            currentAction === PokemonAction.Idle ? "idle" :
+            currentAction === PokemonAction.Flying || currentAction === PokemonAction.Landing ? "fly" :
+            null;
+
+        if (!animationState) {
+            const stoppedAnimation = animationControllerRef.current.stopAnimation();
+            if (stoppedAnimation) {
+                setCurrentAnimation(null);
+            }
+            return;
+        }
+
+        const nextAnimation = animationControllerRef.current.startAnimation(animationState, {
+            loop: currentAction !== PokemonAction.Idle,
+            idleChance: 0.2,
+        });
+
+        if (nextAnimation) {
+            setCurrentAnimation(nextAnimation);
+            setAnimationFrame(0);
+        }
+    }, [currentAction, isDragging]);
+
+    useEffect(() => {
+        let cancelled = false;
+
+        async function loadAnimationMetadata() {
+            setSpriteMeta(null);
+
+            try {
+                const response = await fetch(`/media/sprites/sprite/${String(data.id).padStart(4, "0")}/AnimData.xml`);
+                if (!response.ok) {
+                    return;
+                }
+
+                const xml = await response.text();
+                const parser = new DOMParser();
+                const document = parser.parseFromString(xml, "application/xml");
+                const anims = Array.from(document.querySelectorAll("Anim"));
+                const target = anims.find((node) => node.querySelector("Name")?.textContent === currentAnimation) ?? anims[0];
+                if (!target || cancelled) {
+                    return;
+                }
+
+                const name = target.querySelector("Name")?.textContent ?? currentAnimation ?? "Idle";
+                const frameWidth = Number(target.querySelector("FrameWidth")?.textContent ?? 32);
+                const frameHeight = Number(target.querySelector("FrameHeight")?.textContent ?? 32);
+                const durations = Array.from(target.querySelectorAll("Duration"))
+                    .map((node) => Number(node.textContent ?? "0") * (1000 / 60))
+                    .filter((value) => Number.isFinite(value) && value > 0);
+                const frameCount = Math.max(durations.length || 1, 1);
+                const image = new Image();
+                image.onload = () => {
+                    if (cancelled) {
+                        return;
+                    }
+
+                    const sheetColumns = Math.max(1, Math.round(image.naturalWidth / frameWidth));
+                    const sheetRows = Math.max(1, Math.round(image.naturalHeight / frameHeight));
+                    setSpriteMeta({
+                        frameWidth,
+                        frameHeight,
+                        frameCount: Math.min(frameCount, sheetColumns),
+                        durations: durations.length ? durations : [1000 / 60],
+                        sheetRows,
+                        sheetColumns,
+                    });
+                };
+                image.src = `/media/sprites/sprite/${String(data.id).padStart(4, "0")}/${name}-Anim.png`;
+            } catch {
+                if (!cancelled) {
+                    setSpriteMeta(null);
+                }
+            }
+        }
+
+        void loadAnimationMetadata();
+
+        return () => {
+            cancelled = true;
+        };
+    }, [currentAnimation, data.id]);
+
+    useEffect(() => {
+        if (!currentAnimation || isDragging || !spriteMeta) {
+            return;
+        }
+
+        if (spriteMeta.frameCount <= 1) {
+            return;
+        }
+
+        const frameDuration = spriteMeta.durations[Math.min(animationFrame, spriteMeta.durations.length - 1)] ?? 100;
+        const timer = window.setTimeout(() => {
+            setAnimationFrame((previous) => {
+                const totalFrames = spriteMeta.frameCount;
+                if (animationControllerRef.current.isLooping()) {
+                    return (previous + 1) % totalFrames;
+                }
+
+                return Math.min(previous + 1, totalFrames - 1);
+            });
+        }, frameDuration);
+
+        return () => window.clearTimeout(timer);
+    }, [animationFrame, currentAnimation, isDragging, spriteMeta]);
 
     function stopDragging() {
         // Prevent pokemon from moving to target position after dragging
@@ -235,15 +358,32 @@ const Pokemon = function Pokemon({ maxX, maxY, floorY, data, showDebugInfo }: Po
         resizeObserver.observe(pokemonRef.current as Element);
     }, []);
 
+    const spriteWidth = spriteMeta?.frameWidth ?? 32;
+    const spriteHeight = spriteMeta?.frameHeight ?? 32;
+    const spriteFrames = spriteMeta?.frameCount ?? 1;
+    const spriteStyle = getPokemonAnimationFrameStyle(
+        currentAnimation,
+        facing,
+        animationFrame,
+        spriteWidth,
+        spriteHeight,
+        spriteFrames,
+        spriteMeta?.sheetRows ?? 1,
+        spriteMeta?.sheetColumns ?? spriteFrames,
+    );
+    const spritePath = `/media/sprites/sprite/${String(data.id).padStart(4, "0")}/${currentAnimation ?? "Idle"}-Anim.png`;
+
     return (
         <div 
-            className="w-10 h-10 pokemon" 
+            className="pokemon" 
             ref={pokemonRef} 
             data-facing={facing}
             data-pokemon-id={data.id}
             style={{
                 left: displayPosition.x,
                 top: displayPosition.y,
+                width: spriteStyle.width,
+                height: spriteStyle.height,
             }}
         >
             {showDebugInfo && (
@@ -251,6 +391,7 @@ const Pokemon = function Pokemon({ maxX, maxY, floorY, data, showDebugInfo }: Po
                     <div>{data.name} (#{data.id})</div>
                     <div>Type: {data.types.join(" / ") || "unknown"}</div>
                     <div>Facing: {facing}</div>
+                    <div>Anim: {currentAnimation ?? "none"}</div>
                 </div>
             )}
             <Draggable 
@@ -267,11 +408,20 @@ const Pokemon = function Pokemon({ maxX, maxY, floorY, data, showDebugInfo }: Po
                     }
                 }}>
                 <div
-                    className="bg-red-500 w-full h-full"
+                    className="sprite-sheet"
+                    style={{
+                        width: spriteStyle.width,
+                        height: spriteStyle.height,
+                        visibility: spriteMeta ? "visible" : "hidden",
+                        backgroundImage: `url("${spritePath}")`,
+                        backgroundPosition: spriteStyle.backgroundPosition,
+                        backgroundSize: spriteStyle.backgroundSize,
+                        imageRendering: "pixelated",
+                        backgroundRepeat: "no-repeat",
+                    }}
                 />
             </Draggable>
         </div>
-        
     );
 };
 
