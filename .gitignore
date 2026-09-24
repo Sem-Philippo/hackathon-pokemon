@@ -34,12 +34,6 @@ yarn-debug.log*
 yarn-error.log*
 .pnpm-debug.log*
 
-# sqlite
-*.db
-*.db-journal
-*.db-wal
-*.db-shm
-
 # env file
 .env
 
