@@ -5,7 +5,7 @@ import { PageTemplate } from "@/components/templates/PageTemplate/PageTemplate";
 
 import { useState } from "react";
 import { PlayArea } from "@/components/organisms/PlayArea/PlayArea";
-import Button from "@/components/atoms/Button/Button";
+import { Shop, type ShopItem } from "@/components/organisms/Shop/Shop";
 import { type QueuedItem, FoodItem, ItemType } from "@/components/types/Items";
 import { type PokemonData } from "@/components/types/Pokemon";
 
@@ -25,26 +25,49 @@ const showPokemonDebugInfo = false;
 const PokemonPage = function PokemonPage({ pokemon }: PokemonPageProps) {
   const [queuedItems, setQueuedItems] = useState<QueuedItem[]>([]);
 
-  const foodItems: QueuedItem[] = 
-  [{
-    name: FoodItem[FoodItem.Sitrus_Berry].toString(),
-    type: ItemType.food,
-    size: {width: 40, height: 40}
-  },
-  {
-    name: FoodItem[FoodItem.Oran_Berry].toString(),
-    type: ItemType.food,
-    size: {width: 40, height: 40}
-  }]
-  // useState: React re-renders this component whenever these values change.
-  // The function form of the initial value runs once, so we don't remap the
-  // array on every render.
+  const shopItems: ShopItem[] = [
+    FoodItem.Oran_Berry,
+    FoodItem.Pecha_Berry,
+    FoodItem.Cheri_Berry,
+    FoodItem.Rawst_Berry,
+    FoodItem.Chesto_Berry,
+    FoodItem.Aspear_Berry,
+    FoodItem.Sitrus_Berry,
+    FoodItem.Lum_Berry,
+  ].map((berry, index) => {
+    const label = FoodItem[berry].replace(/_/g, " ");
+    const iconFiles = [
+      "oran-berry",
+      "pecha-berry",
+      "cheri-berry",
+      "rawst-berry",
+      "chesto-berry",
+      "aspear-berry",
+      "sitrus-berry",
+      "lum-berry",
+    ];
+
+    return {
+      id: `${berry}-${index}`,
+      label,
+      cost: 25 + index * 5,
+      icon: `/media/items/${iconFiles[index]}.png`,
+      item: {
+        name: FoodItem[berry],
+        type: ItemType.food,
+        size: { width: 40, height: 40 },
+      },
+    };
+  });
 
   return (
     <PageTemplate>
-      <div className="w-full h-full">
+      <div className="relative h-full w-full overflow-visible rounded-xl border border-stone-200 bg-stone-100">
+        <Shop
+          items={shopItems}
+          onBuy={(item) => setQueuedItems((prev) => [...prev, item])}
+        />
         <PlayArea queuedItems={queuedItems} setQueuedItems={setQueuedItems} pokemon={pokemon} showDebugInfo={showPokemonDebugInfo}/>
-        {foodItems.map((item, index) => <Button key={item.name} onClick={() => setQueuedItems((prev) => [...prev, foodItems[index]])}><p>{item.name.replace("_", " ")}</p></Button>)}
       </div>
     </PageTemplate>
   );
