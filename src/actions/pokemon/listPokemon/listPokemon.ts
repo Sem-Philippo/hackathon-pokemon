@@ -3,7 +3,7 @@
 import { prisma } from "@/prisma/prismaClient";
 import { assignPokemonFoodPreferences } from "@/components/types/Pokemon";
 
-const pokemonCount = 10;
+const pokemonCount = 1;
 const maxPokemonId = 1025;
 
 function randomPokemonIds() {

@@ -215,6 +215,8 @@ const Pokemon = function Pokemon({ maxX, maxY, floorY, itemExists, getItems, del
     function stopDragging() {
         // Prevent pokemon from moving to target position after dragging
         targetPosition.current = { ...position.current };
+        currentAction.current = PokemonAction.None;
+        setCurrentActionState(PokemonAction.None);
 
         if (!data.canFly) {
             targetPosition.current.y = floorY;
@@ -290,7 +292,7 @@ const Pokemon = function Pokemon({ maxX, maxY, floorY, itemExists, getItems, del
 
                 // If the pokemon is already in the air, let it move around in the air while flying or moving
                 if (action === PokemonAction.Flying || (action === PokemonAction.Move && data.canFly && position.current.y < floorY)) {
-                    newY = Math.floor(Math.random() * maxY - height);
+                    newY = Math.max(Math.floor(Math.random() * (maxY - height)), height);
                 }
                 targetPosition.current = {
                     x: newX,
@@ -476,12 +478,6 @@ const Pokemon = function Pokemon({ maxX, maxY, floorY, itemExists, getItems, del
     }
 
     function handleMovementComplete() {
-        if (data.canFly && targetPosition.current.y < floorY) {
-            currentAction.current = PokemonAction.Flying;
-            setCurrentActionState(PokemonAction.Flying);
-            return;
-        }
-
         currentAction.current = PokemonAction.Idle;
         setCurrentActionState(PokemonAction.Idle);
     }

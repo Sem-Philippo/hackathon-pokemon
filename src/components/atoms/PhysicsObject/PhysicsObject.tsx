@@ -60,7 +60,9 @@ const PhysicsObject = function PhysicsObject(
                     hadPositiveDistance.current = true;
                     const movement = moveSpeed * deltaTime;
                     const weightReduction = weight * deltaTime;
+
                     let newPosition: Position = {x:0, y: 0}
+
                     if (distance <= movement) {
                         onMovementComplete?.();
                         newPosition = {
@@ -71,8 +73,8 @@ const PhysicsObject = function PhysicsObject(
                         newPosition = {
                             x: currentPosition.x + (dx / distance) * movement,
                             y: dy < 0 ? 
-                            currentPosition.y + (dy / distance) * (movement - weightReduction) : // Move slower upwards
-                            currentPosition.y + (dy / distance) * (2 * movement + weightReduction), // Move quicker downwards
+                            currentPosition.y + (dy / distance) * (movement) : // Move slower upwards
+                            currentPosition.y + Math.max(0.1, (2 * movement + weightReduction)), // Move quicker downwards
                         };
                     }
 
@@ -98,7 +100,7 @@ const PhysicsObject = function PhysicsObject(
         return () => {
             cancelAnimationFrame(animationFrame);
         };
-    }, [moveSpeed, weight, physicsPaused, floorY, updatePosition]);
+    }, [moveSpeed, weight, physicsPaused, floorY, updatePosition, targetPosition, position]);
 
 
     return (
