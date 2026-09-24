@@ -61,7 +61,6 @@ const PhysicsObject = function PhysicsObject(
                     const movement = moveSpeed * deltaTime;
                     const weightReduction = weight * deltaTime;
                     let newPosition: Position = {x:0, y: 0}
-                    console.log(distance);
                     if (distance <= movement) {
                         onMovementComplete?.();
                         newPosition = {

@@ -387,15 +387,17 @@ const Pokemon = function Pokemon({ maxX, maxY, floorY, itemExists, getItems, del
         }
 
         if (isDragging) {
+            console.log("running cleanup kinda");
             clearTimeout(timeoutId.current);
         }
 
         wasDragging.current = isDragging;
 
         return () => {
+            console.log("running cleanup");
             clearTimeout(timeoutId.current);
         };
-    }, [data.PokemonUUID, data.canFly, data.dislikedFood, data.likedFood, floorY, getItems, height, isDragging, maxX, maxY, neutralFoods, pokemonActions, pokemonDebug, width, currentAction]);
+    }, [data.PokemonUUID, data.canFly, data.dislikedFood, data.likedFood, floorY, getItems, height, isDragging, maxX, maxY, neutralFoods, pokemonActions, pokemonDebug, width, currentAction, currentActionState]);
 
     useEffect(() => {
         const resizeObserver = new ResizeObserver((event) => {
@@ -443,7 +445,7 @@ const Pokemon = function Pokemon({ maxX, maxY, floorY, itemExists, getItems, del
     useEffect(() => {
         console.log("action changed to", currentAction);
         if (currentAction.current === PokemonAction.Idle) {
-            setTimeout(() => {currentAction.current = PokemonAction.None; setCurrentActionState(PokemonAction.None)}, 1000)
+            setTimeout(() => {currentAction.current = PokemonAction.None; setCurrentActionState(PokemonAction.None); console.log("Allowing actions");}, 1000)
         }
         
     }, [currentAction, currentActionState])
