@@ -19,8 +19,9 @@ const GameItem = function GameItem({ maxX, maxY, floorY, itemData, changePositio
 
     const [width, setWidth] = useState(itemData.size.width);
     const [height, setHeight] = useState(itemData.size.height);
+    const itemOffset = 80;
     const adjMaxX = maxX - width;
-    const adjMaxY = maxY - height;
+    const adjMaxY = maxY - height - itemOffset;
     const itemRef = useRef<HTMLDivElement>(null);
 
     const spritePath = `/media/items/${itemData.name.toLowerCase()}.png`;
@@ -67,7 +68,7 @@ const GameItem = function GameItem({ maxX, maxY, floorY, itemData, changePositio
             }}
         >
             <PhysicsObject
-                floorY={floorY}
+                floorY={floorY - itemOffset}
                 physicsPaused={isDragging}
                 moveSpeed={0}
                 weight={200}

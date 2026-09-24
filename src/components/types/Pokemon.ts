@@ -67,7 +67,7 @@ function assignPokemonFoodPreferences(types: (PokemonType | null)[]) {
             likedFood: FoodItem.Aspear_Berry,
             dislikedFood: FoodItem.Lum_Berry
         },
-        "metal": {
+        "steel": {
             likedFood: FoodItem.Pecha_Berry,
             dislikedFood: FoodItem.Sitrus_Berry
         },
@@ -103,6 +103,12 @@ function assignPokemonFoodPreferences(types: (PokemonType | null)[]) {
     const likedFood = foodPreferences[type1].likedFood;
     let dislikedFood = foodPreferences[type1].dislikedFood;
 
+    console.log(type2);
+    if (type2) {
+        console.log(foodPreferences[type2]);
+    }
+    
+
     if (type2 && foodPreferences[type2].dislikedFood !== likedFood) {
         dislikedFood = foodPreferences[type2].dislikedFood;
     }
@@ -129,7 +135,7 @@ const enum PokemonType {
     Dark = "dark",
     Fighting = "fighting",
     Psychic = "psychic",
-    Metal = "metal",
+    Steel = "steel",
     Poison = "poison",
     Fairy = "fairy",
     Dragon = "dragon",
