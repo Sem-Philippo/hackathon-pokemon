@@ -14,13 +14,14 @@ type PokemonProps = {
     maxY: number;
     floorY: number;
     data: PokemonData;
+    spawnPosition?: "center" | "top";
     showDebugInfo: boolean;
     itemExists: (itemNames: string | string[]) => boolean;
     getItems: (itemNames: string | string[]) => Item[];
     deleteItem: (item: Item) => void;
 };
 
-const Pokemon = function Pokemon({ maxX, maxY, floorY, itemExists, getItems, deleteItem, data, showDebugInfo }: PokemonProps) {
+const Pokemon = function Pokemon({ maxX, maxY, floorY, itemExists, getItems, deleteItem, data, showDebugInfo, spawnPosition = "center" }: PokemonProps) {
     const pokemonScale = 2;
 
     const animationControllerRef = useRef(createPokemonAnimationObject());
@@ -245,13 +246,31 @@ const Pokemon = function Pokemon({ maxX, maxY, floorY, itemExists, getItems, del
 
     const position = useRef<Position>({
         x: 0,
-        y: 100,
+        y: adjFloorY,
     });
 
     const targetPosition = useRef<Position>({
         x: 0,
         y: adjFloorY,
     });
+
+    const [hasInitializedPosition, setHasInitializedPosition] = useState(false);
+
+    useEffect(() => {
+        if (hasInitializedPosition || maxX <= 100 || maxY <= 100) {
+            return;
+        }
+
+        const initialPosition = {
+            x: Math.max(0, (maxX - width) / 2),
+            y: spawnPosition === "top" ? 0 : Math.max(0, (maxY - height) / 2),
+        };
+
+        position.current = initialPosition;
+        targetPosition.current = initialPosition;
+        setDisplayPosition(initialPosition);
+        setHasInitializedPosition(true);
+    }, [hasInitializedPosition, height, maxX, maxY, spawnPosition, width]);
 
     // Action loop
     useEffect(() => {
@@ -394,7 +413,7 @@ const Pokemon = function Pokemon({ maxX, maxY, floorY, itemExists, getItems, del
             }
         }
 
-        if (!wasDragging.current && !isDragging && currentAction.current === PokemonAction.None) {
+        if (hasInitializedPosition && !wasDragging.current && !isDragging && currentAction.current === PokemonAction.None) {
             chooseAction();
         }
         else if (wasDragging.current){
@@ -412,7 +431,7 @@ const Pokemon = function Pokemon({ maxX, maxY, floorY, itemExists, getItems, del
             console.log("running cleanup");
             clearTimeout(timeoutId.current);
         };
-    }, [data.PokemonUUID, data.canFly, data.dislikedFood, data.likedFood, adjFloorY, getItems, height, isDragging, adjMaxX, adjMaxY, neutralFoods, pokemonActions, pokemonDebug, width, currentAction, currentActionState]);
+    }, [data.PokemonUUID, data.canFly, data.dislikedFood, data.likedFood, adjFloorY, getItems, hasInitializedPosition, height, isDragging, adjMaxX, adjMaxY, neutralFoods, pokemonActions, pokemonDebug, width, currentAction, currentActionState]);
 
     useEffect(() => {
         // Hunger loop

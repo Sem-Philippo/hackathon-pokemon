@@ -22,6 +22,7 @@ enum ItemType {
     food,
     heldItem,
     evolutionItem,
+    egg,
 }
 
 enum FoodItem {

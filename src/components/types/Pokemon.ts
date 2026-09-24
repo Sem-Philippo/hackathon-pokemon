@@ -15,6 +15,7 @@ type PokemonData = {
     canFly: boolean;
     likedFood: FoodItem;
     dislikedFood: FoodItem;
+    spawnPosition?: "center" | "top";
 };
 
 function assignPokemonFoodPreferences(types: (PokemonType | null)[]) {
