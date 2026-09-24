@@ -36,7 +36,8 @@ const Pokemon = function Pokemon({ maxX, maxY, floorY, itemExists, getItems, del
     const adjMaxX = maxX - width;
     const adjMaxY = maxY - height;
     const pokemonRef = useRef<HTMLDivElement>(null);
-    const [currentAction, setCurrentAction] = useState<PokemonAction>(PokemonAction.None);
+    const currentAction = useRef<PokemonAction>(PokemonAction.None);
+    const [currentActionState, setCurrentActionState] = useState<PokemonAction>(PokemonAction.None);
     const [data] = useState<PokemonData>({
         hp: 100,
         atk: 10,
@@ -117,7 +118,6 @@ const Pokemon = function Pokemon({ maxX, maxY, floorY, itemExists, getItems, del
 
     // Action loop
     useEffect(() => {
-
         function chooseAction() {
             let validAction = false;
             let action: PokemonAction = PokemonAction.Idle;
@@ -133,14 +133,9 @@ const Pokemon = function Pokemon({ maxX, maxY, floorY, itemExists, getItems, del
                     validAction = false;
                 }
             }
-            if (!startedUp.current) {
-                startedUp.current = true;
-                action = PokemonAction.Idle;
-            }
-            else if (!initialResize.current) {
-                initialResize.current = true;
-                action = PokemonAction.Idle;
-            }
+
+            currentAction.current = action;
+            setCurrentActionState(action);
 
             if (pokemonDebug) {
                 switch (action) {
@@ -248,23 +243,26 @@ const Pokemon = function Pokemon({ maxX, maxY, floorY, itemExists, getItems, del
             if (pokemonDebug) {
                 console.log("setting current action to ", action); 
             }
-            setCurrentAction(action);
 
             const delay = Math.floor(Math.random() * (maxActionTime - minActionTime + 1)) + minActionTime;
 
-            timeoutId.current = setTimeout(chooseAction, delay);
+            timeoutId.current = setTimeout(waitBeforeAction, 100);
         }
 
         function waitBeforeAction() {
-            const delay = Math.floor(Math.random() * (maxActionTime - minActionTime + 1)) + minActionTime;
-
-            timeoutId.current = setTimeout(chooseAction, delay);
+            console.log("waiting", currentAction.current);
+            if (currentAction.current === PokemonAction.None) {
+                timeoutId.current = setTimeout(chooseAction, 100);
+            }
+            else {
+                timeoutId.current = setTimeout(waitBeforeAction, 100);
+            }
         }
 
-        if (!wasDragging.current && !isDragging) {
+        if (!wasDragging.current && !isDragging && currentAction.current === PokemonAction.None) {
             chooseAction();
         }
-        else {
+        else if (wasDragging.current){
             waitBeforeAction();
         }
 
@@ -277,7 +275,7 @@ const Pokemon = function Pokemon({ maxX, maxY, floorY, itemExists, getItems, del
         return () => {
             clearTimeout(timeoutId.current);
         };
-    }, [maxX, maxY, isDragging, getItems, pokemonActions]);
+    }, [maxX, maxY, isDragging, getItems, pokemonActions, currentAction]);
 
     useEffect(() => {
         const resizeObserver = new ResizeObserver((event) => {
@@ -316,6 +314,14 @@ const Pokemon = function Pokemon({ maxX, maxY, floorY, itemExists, getItems, del
     }
 
     useEffect(() => console.log(claimedItem), [claimedItem]);
+
+    useEffect(() => {
+        console.log("action changed to", currentAction);
+        if (currentAction.current === PokemonAction.Idle) {
+            setTimeout(() => {currentAction.current = PokemonAction.None; setCurrentActionState(PokemonAction.None)}, 1000)
+        }
+        
+    }, [currentAction, currentActionState])
 
     function consumeItem(item: Item) {
         // remove from array
@@ -360,6 +366,7 @@ const Pokemon = function Pokemon({ maxX, maxY, floorY, itemExists, getItems, del
                 position={position}
                 updatePosition={updatePosition}
                 targetPosition={targetPosition}
+                onMovementComplete={() => {currentAction.current = PokemonAction.Idle; setCurrentActionState(PokemonAction.Idle);}}
             >
                 <Draggable 
                 maxX={adjMaxX} 

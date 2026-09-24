@@ -1,11 +1,8 @@
 "use client";
 
-import { useEffect, useRef, useState } from "react";
+import { useEffect, useRef } from "react";
 import { type Position } from "@/components/types/Draggable";
-import { PokemonAction, type PokemonData } from "@/components/types/Pokemon";
 import "@/components/molecules/Pokemon/Pokemon.css";
-import { Draggable } from "@/components/atoms/Draggable/Draggable";
-import { Item } from "@/components/types/Items";
 
 type PhysicsObjectProps = {
     floorY: number;
@@ -17,6 +14,7 @@ type PhysicsObjectProps = {
     position: React.RefObject<Position>;    
     updatePosition: (position: Position) => void;
     targetPosition: React.RefObject<Position>;
+    onMovementComplete?: () => void;
 };
 
 const PhysicsObject = function PhysicsObject(
@@ -30,7 +28,10 @@ const PhysicsObject = function PhysicsObject(
         updatePosition, 
         position, 
         targetPosition,
+        onMovementComplete,
     }: PhysicsObjectProps) {
+
+        const hadPositiveDistance = useRef<boolean>(true);
 
     // Movement loop
     useEffect(() => {
@@ -56,10 +57,13 @@ const PhysicsObject = function PhysicsObject(
                 const distance = Math.hypot(dx, dy);
 
                 if (distance > 0) {
+                    hadPositiveDistance.current = true;
                     const movement = moveSpeed * deltaTime;
                     const weightReduction = weight * deltaTime;
                     let newPosition: Position = {x:0, y: 0}
+                    console.log(distance);
                     if (distance <= movement) {
+                        onMovementComplete?.();
                         newPosition = {
                             x: target.x,
                             y: target.y,
@@ -76,6 +80,10 @@ const PhysicsObject = function PhysicsObject(
                     position.current = newPosition;
 
                     updatePosition(position.current);
+                }
+                else if (hadPositiveDistance.current){
+                    onMovementComplete?.();
+                    hadPositiveDistance.current = false;
                 }
             }
             if (position.current.y > floorY) {
