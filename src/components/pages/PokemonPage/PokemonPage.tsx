@@ -51,7 +51,7 @@ const PokemonPage = function PokemonPage({ pokemon }: PokemonPageProps) {
       id: `${berry}-${index}`,
       label,
       cost: 25 + index * 5,
-      icon: `/media/items/${iconFiles[index]}.svg`,
+      icon: `/media/items/${iconFiles[index]}.png`,
       item: {
         name: FoodItem[berry],
         type: ItemType.food,
