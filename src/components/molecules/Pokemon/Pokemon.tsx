@@ -506,6 +506,7 @@ const Pokemon = function Pokemon({ maxX, maxY, floorY, itemExists, getItems, del
                 position={position}
                 updatePosition={updatePosition}
                 targetPosition={targetPosition}
+                onMovementComplete={() => {currentAction.current = PokemonAction.Idle; setCurrentActionState(PokemonAction.Idle);}}
             >
                 {showDebugInfo && (
                 <div className="pointer-events-none absolute bottom-full left-1/2 z-10 mb-1 -translate-x-1/2 whitespace-nowrap rounded bg-black/75 px-1.5 py-1 text-center text-[10px] leading-tight text-white">
