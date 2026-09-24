@@ -1,7 +1,7 @@
 "use server";
 
 import { prisma } from "@/prisma/prismaClient";
-import { assignPokemonFoodPreferences } from "@/components/types/Pokemon";
+import { assignPokemonFoodPreferences, PokemonType } from "@/components/types/Pokemon";
 
 const pokemonCount = 1;
 const maxPokemonId = 1025;
@@ -35,7 +35,7 @@ export async function listPokemon() {
   });
 
   return pokemon.map((entry) => {
-    const foodPreferences = assignPokemonFoodPreferences(entry.id);
+    const foodPreferences = assignPokemonFoodPreferences([entry.type1 as PokemonType, entry.type2 as PokemonType]);
 
     return {
       id: entry.id,
@@ -48,7 +48,7 @@ export async function listPokemon() {
       spDef: entry.specialDefense ?? 0,
       speed: entry.speed ?? 0,
       weight: entry.weight ?? 0,
-      types: [entry.type1, entry.type2].filter((type): type is string => type !== null),
+      types: [entry.type1, entry.type2].filter((type): type is string => type !== null) as PokemonType[],
       canFly: entry.type1 === "flying" || entry.type2 === "flying",
       likedFood: foodPreferences.likedFood,
       dislikedFood: foodPreferences.dislikedFood,
