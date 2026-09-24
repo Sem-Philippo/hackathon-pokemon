@@ -18,9 +18,6 @@ type PokemonData = {
 };
 
 function assignPokemonFoodPreferences(types: (PokemonType | null)[]) {
-    const foods = Object.values(FoodItem)
-        .filter((value): value is FoodItem => typeof value === "number");
-    
     const foodPreferences = {
         "fire": {
             likedFood: FoodItem.Cheri_Berry,
@@ -148,6 +145,7 @@ const enum PokemonAction {
     SlightlyHungry, // Will eat liked food
     Hungry, // Will eat liked and neutral food
     Starving, // Will eat hated food
+    Sleep,
 }
 
 export { PokemonAction, assignPokemonFoodPreferences, type PokemonData, type PokemonFacing, PokemonType };

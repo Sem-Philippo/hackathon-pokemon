@@ -170,6 +170,7 @@ const PlayArea = function PlayArea({ pokemon, showDebugInfo, queuedItems, setQue
                     itemExists={itemExists}
                     getItems={getItems}
                     deleteItem={deleteItem}
+                    timeOfDay={timeOfDay}
                 />
             ))}
             {items.map((item) => (
@@ -186,5 +187,5 @@ const PlayArea = function PlayArea({ pokemon, showDebugInfo, queuedItems, setQue
     );
 };
 
-export { PlayArea };
+export { PlayArea, type TimeOfDay };
 export default PlayArea;

@@ -8,6 +8,7 @@ import "@/components/molecules/Pokemon/Pokemon.css";
 import { Draggable } from "@/components/atoms/Draggable/Draggable";
 import PhysicsObject from "@/components/atoms/PhysicsObject/PhysicsObject";
 import { FoodItem, Item, ItemType } from "@/components/types/Items";
+import { TimeOfDay } from "@/components/organisms/PlayArea/PlayArea";
 
 type PokemonProps = {
     maxX: number;
@@ -18,9 +19,10 @@ type PokemonProps = {
     itemExists: (itemNames: string | string[]) => boolean;
     getItems: (itemNames: string | string[]) => Item[];
     deleteItem: (item: Item) => void;
+    timeOfDay: TimeOfDay;
 };
 
-const Pokemon = function Pokemon({ maxX, maxY, floorY, itemExists, getItems, deleteItem, data, showDebugInfo }: PokemonProps) {
+const Pokemon = function Pokemon({ maxX, maxY, floorY, itemExists, getItems, deleteItem, data, showDebugInfo, timeOfDay }: PokemonProps) {
     const pokemonScale = 2;
 
     const animationControllerRef = useRef(createPokemonAnimationObject());
@@ -48,6 +50,12 @@ const Pokemon = function Pokemon({ maxX, maxY, floorY, itemExists, getItems, del
     const width = useMemo(() => spriteStyle.width * pokemonScale, [spriteStyle.width, pokemonScale]);
     const height = useMemo(() => spriteStyle.height * pokemonScale, [spriteStyle.height, pokemonScale]);
 
+    const [maxHeight, setMaxHeight] = useState(0);
+
+    if (height > maxHeight) {
+        setMaxHeight(height);
+    }
+
     const pokemonDebug = true;
 
     // No need to update the DOM every time hunger updates
@@ -57,10 +65,8 @@ const Pokemon = function Pokemon({ maxX, maxY, floorY, itemExists, getItems, del
     const hungerTickSpeed = 1000;
 
     const adjMaxX = useMemo(() => maxX - width / 2, [maxX, width]);
-    const adjMaxY = useMemo(() => maxY - height / 2, [maxY, height]);
+    const adjMaxY = useMemo(() => maxY - maxHeight / 2, [maxY, maxHeight]);
     const adjFloorY = useMemo(() => floorY - spriteHeight / 2, [floorY, spriteHeight]);
-
-    console.log(width, spriteStyle.width, height, spriteStyle.height);
     const currentAction = useRef<PokemonAction>(PokemonAction.None);
 
     const claimedItem = useRef<Item>(null);
@@ -79,28 +85,30 @@ const Pokemon = function Pokemon({ maxX, maxY, floorY, itemExists, getItems, del
     );
 
     const pokemonActions = useMemo(() => [
-        PokemonAction.Move,
-        PokemonAction.Idle,
-        ...(data.canFly
+        ...(timeOfDay === "night"
             ? [
-                PokemonAction.Flying,
-                PokemonAction.Landing,
+                PokemonAction.Sleep
             ]
-            : []),
-        ...(hunger <= maxHunger * 0.75 && itemExists(FoodItem[data.likedFood]) && !hasClaimed ? [
-            PokemonAction.SlightlyHungry,
-            PokemonAction.SlightlyHungry,
-            PokemonAction.SlightlyHungry,
-            PokemonAction.SlightlyHungry,
-            PokemonAction.SlightlyHungry,
-        ] : []),
-        ...(hunger <= maxHunger * 0.5 && itemExists([FoodItem[data.likedFood], ...neutralFoods]) && !hasClaimed ? [
-            PokemonAction.Hungry,
-        ] : []),
-        ...(hunger <= maxHunger * 0.2 && itemExists([FoodItem[data.likedFood], ...neutralFoods, FoodItem[data.dislikedFood]]) && !hasClaimed ? [
-            PokemonAction.Starving,
-        ] : []),
-    ], [data.canFly, data.dislikedFood, data.likedFood, hasClaimed, hunger, itemExists, neutralFoods]);
+            : [
+                PokemonAction.Move,
+                PokemonAction.Idle,
+                ...(data.canFly
+                    ? [
+                        PokemonAction.Flying,
+                        PokemonAction.Landing,
+                    ]
+                    : []),
+                ...(hunger <= maxHunger * 0.75 && itemExists(FoodItem[data.likedFood]) && !hasClaimed ? [
+                    PokemonAction.SlightlyHungry,
+                ] : []),
+                ...(hunger <= maxHunger * 0.5 && itemExists([FoodItem[data.likedFood], ...neutralFoods]) && !hasClaimed ? [
+                    PokemonAction.Hungry,
+                ] : []),
+                ...(hunger <= maxHunger * 0.2 && itemExists([FoodItem[data.likedFood], ...neutralFoods, FoodItem[data.dislikedFood]]) && !hasClaimed ? [
+                    PokemonAction.Starving,
+                ] : []),
+            ]),
+    ], [data.canFly, data.dislikedFood, data.likedFood, hasClaimed, hunger, itemExists, neutralFoods, timeOfDay]);
 
     const [isDragging, setIsDragging] = useState(false);
     const wasDragging = useRef<boolean>(false);
@@ -124,6 +132,7 @@ const Pokemon = function Pokemon({ maxX, maxY, floorY, itemExists, getItems, del
             currentActionState === PokemonAction.SlightlyHungry ||
             currentActionState === PokemonAction.Hungry ||
             currentActionState === PokemonAction.Starving ? (isAirborne ? "fly" : "walk") :
+            currentActionState === PokemonAction.Sleep ? "sleep" :
             null;
 
         if (!animationState) {
@@ -297,6 +306,9 @@ const Pokemon = function Pokemon({ maxX, maxY, floorY, itemExists, getItems, del
                     case PokemonAction.Starving:
                         console.log("Pokemon is starving");
                         break;
+                    case PokemonAction.Sleep:
+                        console.log("Pokemon is eepy");
+                        break;
                 }
             }
             
@@ -307,7 +319,7 @@ const Pokemon = function Pokemon({ maxX, maxY, floorY, itemExists, getItems, del
 
                 // If the pokemon is already in the air, let it move around in the air while flying or moving
                 if (action === PokemonAction.Flying || (action === PokemonAction.Move && data.canFly && position.current.y < adjFloorY)) {
-                    newY = Math.max(Math.floor(Math.random() * adjMaxY), height);
+                    newY = Math.max(Math.floor(Math.random() * adjMaxY), maxHeight);
                 }
                 targetPosition.current = {
                     x: newX,
@@ -412,7 +424,7 @@ const Pokemon = function Pokemon({ maxX, maxY, floorY, itemExists, getItems, del
             console.log("running cleanup");
             clearTimeout(timeoutId.current);
         };
-    }, [data.PokemonUUID, data.canFly, data.dislikedFood, data.likedFood, adjFloorY, getItems, height, isDragging, adjMaxX, adjMaxY, neutralFoods, pokemonActions, pokemonDebug, width, currentAction, currentActionState]);
+    }, [data.PokemonUUID, data.canFly, data.dislikedFood, data.likedFood, adjFloorY, getItems, maxHeight, isDragging, adjMaxX, adjMaxY, neutralFoods, pokemonActions, pokemonDebug, width, currentAction, currentActionState]);
 
     useEffect(() => {
         // Hunger loop
@@ -441,7 +453,7 @@ const Pokemon = function Pokemon({ maxX, maxY, floorY, itemExists, getItems, del
         }
 
         const dx = Math.abs((claimedItem.current.position.x + claimedItem.current.size.width / 2) - (position.x + width / 2)) - claimedItem.current.size.width / 2 - width / 2;
-        const dy = Math.abs((claimedItem.current.position.y + claimedItem.current.size.height / 2) - (position.y + height / 2)) - claimedItem.current.size.height / 2 - height / 2;
+        const dy = Math.abs((claimedItem.current.position.y + claimedItem.current.size.height / 2) - (position.y + maxHeight / 2)) - claimedItem.current.size.height / 2 - maxHeight / 2;
 
         if (dx < 0 && dy < 0) {
             consumeItem(claimedItem.current);
@@ -452,7 +464,7 @@ const Pokemon = function Pokemon({ maxX, maxY, floorY, itemExists, getItems, del
 
     useEffect(() => {
         console.log("action changed to", currentAction);
-        if (currentAction.current === PokemonAction.Idle) {
+        if (currentAction.current === PokemonAction.Idle || currentAction.current === PokemonAction.Sleep) {
             setTimeout(() => {currentAction.current = PokemonAction.None; setCurrentActionState(PokemonAction.None); console.log("Allowing actions");}, 1000)
         }
         
@@ -484,6 +496,7 @@ const Pokemon = function Pokemon({ maxX, maxY, floorY, itemExists, getItems, del
     }
 
     function handleMovementComplete() {
+        console.log("completed");
         currentAction.current = PokemonAction.Idle;
         setCurrentActionState(PokemonAction.Idle);
     }
@@ -497,7 +510,7 @@ const Pokemon = function Pokemon({ maxX, maxY, floorY, itemExists, getItems, del
                 left: displayPosition.x,
                 top: displayPosition.y,
                 width: spriteStyle.width,
-                height: spriteStyle.height,
+                height: maxHeight,
                 scale: pokemonScale,
             }}
         >
