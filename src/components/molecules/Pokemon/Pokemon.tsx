@@ -26,6 +26,7 @@ const Pokemon = function Pokemon({ maxX, maxY, floorY, itemExists, getItems, del
 
     const animationControllerRef = useRef(createPokemonAnimationObject());
     const [currentActionState, setCurrentActionState] = useState<PokemonAction>(PokemonAction.None);
+    const [isEating, setIsEating] = useState(false);
     const [currentAnimation, setCurrentAnimation] = useState<string | null>("Idle");
     const [animationFrame, setAnimationFrame] = useState(0);
     const [facing, setFacing] = useState<PokemonFacing>("right");
@@ -119,6 +120,7 @@ const Pokemon = function Pokemon({ maxX, maxY, floorY, itemExists, getItems, del
 
         const isAirborne = data.canFly && position.current.y < adjFloorY;
         const animationState =
+            isEating ? "eat" :
             currentActionState === PokemonAction.Idle ? "idle" :
             currentActionState === PokemonAction.Flying || currentActionState === PokemonAction.Landing ? "fly" :
             currentActionState === PokemonAction.Move ||
@@ -144,7 +146,7 @@ const Pokemon = function Pokemon({ maxX, maxY, floorY, itemExists, getItems, del
             setCurrentAnimation(nextAnimation);
             setAnimationFrame(0);
         }
-    }, [currentActionState, data.canFly, adjFloorY, isDragging]);
+    }, [currentActionState, data.canFly, adjFloorY, isDragging, isEating]);
 
     useEffect(() => {
         let cancelled = false;
@@ -221,7 +223,11 @@ const Pokemon = function Pokemon({ maxX, maxY, floorY, itemExists, getItems, del
                     return (previous + 1) % totalFrames;
                 }
 
-                return Math.min(previous + 1, totalFrames - 1);
+                const nextFrame = Math.min(previous + 1, totalFrames - 1);
+                if (currentAnimation === "Eat" && nextFrame === totalFrames - 1) {
+                    setIsEating(false);
+                }
+                return nextFrame;
             });
         }, frameDuration);
 
@@ -484,6 +490,7 @@ const Pokemon = function Pokemon({ maxX, maxY, floorY, itemExists, getItems, del
             switch (item.type) {
                 case ItemType.food:
                     setHunger((prev) => prev + maxHunger * 0.2);
+                    setIsEating(true);
                     break;
                 case ItemType.heldItem:
                     // Equip item logic
