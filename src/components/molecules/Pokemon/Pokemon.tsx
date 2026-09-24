@@ -358,7 +358,6 @@ const Pokemon = function Pokemon({ maxX, maxY, floorY, itemExists, getItems, del
 
                 foodItems.forEach(item => {
                     if (!item.claimedBy) {
-                        console.log("test");
                         item.claimedBy = data.PokemonUUID;
                         console.log("item claimed by", item.claimedBy);
 
@@ -414,14 +413,12 @@ const Pokemon = function Pokemon({ maxX, maxY, floorY, itemExists, getItems, del
         }
 
         if (isDragging) {
-            console.log("running cleanup kinda");
             clearTimeout(timeoutId.current);
         }
 
         wasDragging.current = isDragging;
 
         return () => {
-            console.log("running cleanup");
             clearTimeout(timeoutId.current);
         };
     }, [data.PokemonUUID, data.canFly, data.dislikedFood, data.likedFood, adjFloorY, getItems, maxHeight, isDragging, adjMaxX, adjMaxY, neutralFoods, pokemonActions, pokemonDebug, width, currentAction, currentActionState]);
@@ -438,7 +435,7 @@ const Pokemon = function Pokemon({ maxX, maxY, floorY, itemExists, getItems, del
     function updatePosition(nextPosition: Position) {
         setDisplayPosition((previousPosition) => {
             if (previousPosition.x !== nextPosition.x) {
-                setFacing(nextPosition.x < previousPosition.x ? "left" : "right");
+                setFacing((prev) => nextPosition.x < previousPosition.x ? "left" : nextPosition.x > previousPosition.x ? "right" : prev);
             }
             return nextPosition;
         });
@@ -496,7 +493,6 @@ const Pokemon = function Pokemon({ maxX, maxY, floorY, itemExists, getItems, del
     }
 
     function handleMovementComplete() {
-        console.log("completed");
         if (timeOfDay === 'night') {
             currentAction.current = PokemonAction.Sleep;
             setCurrentActionState(PokemonAction.Sleep);
@@ -548,11 +544,12 @@ const Pokemon = function Pokemon({ maxX, maxY, floorY, itemExists, getItems, del
                 setIsDragging={setIsDragging} 
                 position={position} 
                 onStop={stopDragging}
-                onMove={(nextPosition, previousPosition) => {
-                    if (nextPosition.x !== previousPosition.x) {
-                        setFacing(nextPosition.x < previousPosition.x ? "left" : "right");
-                    }
-                }}>
+                // onMove={(nextPosition, previousPosition) => {
+                //     if (nextPosition.x !== previousPosition.x) {
+                //         setFacing(nextPosition.x < previousPosition.x ? "left" : "right");
+                //     }
+                // }}
+                >
                     <div
                         className="sprite-sheet"
                     style={{
