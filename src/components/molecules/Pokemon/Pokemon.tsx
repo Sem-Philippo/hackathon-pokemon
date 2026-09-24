@@ -37,8 +37,9 @@ const Pokemon = function Pokemon({ maxX, maxY, floorY, itemExists, getItems, del
     const adjMaxX = maxX - width;
     const adjMaxY = maxY - height;
     const pokemonRef = useRef<HTMLDivElement>(null);
+    const currentAction = useRef<PokemonAction>(PokemonAction.None);
     const animationControllerRef = useRef(createPokemonAnimationObject());
-    const [currentAction, setCurrentAction] = useState<PokemonAction>(PokemonAction.None);
+    const [currentActionState, setCurrentActionState] = useState<PokemonAction>(PokemonAction.None);
     const [currentAnimation, setCurrentAnimation] = useState<string | null>("Idle");
     const [animationFrame, setAnimationFrame] = useState(0);
     const [facing, setFacing] = useState<PokemonFacing>("right");
@@ -233,7 +234,6 @@ const Pokemon = function Pokemon({ maxX, maxY, floorY, itemExists, getItems, del
 
     // Action loop
     useEffect(() => {
-
         function chooseAction() {
             let validAction = false;
             let action: PokemonAction = PokemonAction.Idle;
@@ -249,14 +249,9 @@ const Pokemon = function Pokemon({ maxX, maxY, floorY, itemExists, getItems, del
                     validAction = false;
                 }
             }
-            if (!startedUp.current) {
-                startedUp.current = true;
-                action = PokemonAction.Idle;
-            }
-            else if (!initialResize.current) {
-                initialResize.current = true;
-                action = PokemonAction.Idle;
-            }
+
+            currentAction.current = action;
+            setCurrentActionState(action);
 
             if (pokemonDebug) {
                 switch (action) {
@@ -364,23 +359,26 @@ const Pokemon = function Pokemon({ maxX, maxY, floorY, itemExists, getItems, del
             if (pokemonDebug) {
                 console.log("setting current action to ", action); 
             }
-            setCurrentAction(action);
 
             const delay = Math.floor(Math.random() * (maxActionTime - minActionTime + 1)) + minActionTime;
 
-            timeoutId.current = setTimeout(chooseAction, delay);
+            timeoutId.current = setTimeout(waitBeforeAction, 100);
         }
 
         function waitBeforeAction() {
-            const delay = Math.floor(Math.random() * (maxActionTime - minActionTime + 1)) + minActionTime;
-
-            timeoutId.current = setTimeout(chooseAction, delay);
+            console.log("waiting", currentAction.current);
+            if (currentAction.current === PokemonAction.None) {
+                timeoutId.current = setTimeout(chooseAction, 100);
+            }
+            else {
+                timeoutId.current = setTimeout(waitBeforeAction, 100);
+            }
         }
 
-        if (!wasDragging.current && !isDragging) {
+        if (!wasDragging.current && !isDragging && currentAction.current === PokemonAction.None) {
             chooseAction();
         }
-        else {
+        else if (wasDragging.current){
             waitBeforeAction();
         }
 
@@ -393,7 +391,7 @@ const Pokemon = function Pokemon({ maxX, maxY, floorY, itemExists, getItems, del
         return () => {
             clearTimeout(timeoutId.current);
         };
-    }, [data.PokemonUUID, data.canFly, data.dislikedFood, data.likedFood, floorY, getItems, height, isDragging, maxX, maxY, neutralFoods, pokemonActions, pokemonDebug, width]);
+    }, [data.PokemonUUID, data.canFly, data.dislikedFood, data.likedFood, floorY, getItems, height, isDragging, maxX, maxY, neutralFoods, pokemonActions, pokemonDebug, width, currentAction]);
 
     useEffect(() => {
         const resizeObserver = new ResizeObserver((event) => {
@@ -437,6 +435,14 @@ const Pokemon = function Pokemon({ maxX, maxY, floorY, itemExists, getItems, del
     }
 
     useEffect(() => console.log(claimedItem), [claimedItem]);
+
+    useEffect(() => {
+        console.log("action changed to", currentAction);
+        if (currentAction.current === PokemonAction.Idle) {
+            setTimeout(() => {currentAction.current = PokemonAction.None; setCurrentActionState(PokemonAction.None)}, 1000)
+        }
+        
+    }, [currentAction, currentActionState])
 
     function consumeItem(item: Item) {
         // remove from array
