@@ -61,8 +61,8 @@ const PokemonPage = function PokemonPage({ pokemon }: PokemonPageProps) {
   });
 
   return (
-    <PageTemplate>
-      <div className="relative h-full w-full overflow-visible rounded-xl border border-stone-200 bg-stone-100">
+    <PageTemplate showHeader={false} showFooter={false}>
+      <div className="relative h-full w-full overflow-hidden bg-stone-100">
         <Shop
           items={shopItems}
           onBuy={(item) => setQueuedItems((prev) => [...prev, item])}

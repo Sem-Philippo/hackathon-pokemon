@@ -15,9 +15,37 @@ type PlayAreaProps = {
     setQueuedItems: React.Dispatch<React.SetStateAction<QueuedItem[]>>;
 };
 
+type TimeOfDay = "day" | "sunset" | "night";
+
+function getTimeOfDay(date: Date): TimeOfDay {
+    const totalMinutes = date.getHours() * 60 + date.getMinutes() + date.getSeconds() / 60;
+    const nowYear = date.getFullYear();
+    const dayOfYear = Math.floor(
+        (Date.UTC(nowYear, date.getMonth(), date.getDate()) - Date.UTC(nowYear, 0, 0)) / 86400000,
+    );
+    const seasonalOffsetMinutes = Math.sin(((dayOfYear / 365) * Math.PI * 2) - Math.PI / 2) * 120;
+    const sunriseMinutes = 360 + seasonalOffsetMinutes;
+    const sunsetMinutes = 1080 - seasonalOffsetMinutes;
+    const duskWindowMinutes = 30;
+
+    if (totalMinutes > sunriseMinutes + duskWindowMinutes && totalMinutes < sunsetMinutes - duskWindowMinutes) {
+        return "day";
+    }
+
+    if (
+        (totalMinutes >= sunriseMinutes - duskWindowMinutes && totalMinutes <= sunriseMinutes + duskWindowMinutes) ||
+        (totalMinutes >= sunsetMinutes - duskWindowMinutes && totalMinutes <= sunsetMinutes + duskWindowMinutes)
+    ) {
+        return "sunset";
+    }
+
+    return "night";
+}
+
 const PlayArea = function PlayArea({ pokemon, showDebugInfo, queuedItems, setQueuedItems }: PlayAreaProps) {
     const [width, setWidth] = useState(100);
     const [height, setHeight] = useState(100);
+    const [timeOfDay, setTimeOfDay] = useState<TimeOfDay>(getTimeOfDay(new Date()));
 
     const floorY = height - 50;
     const playAreaRef = useRef<HTMLDivElement>(null);
@@ -93,8 +121,44 @@ const PlayArea = function PlayArea({ pokemon, showDebugInfo, queuedItems, setQue
         return () => resizeObserver.disconnect();
     }, []);
 
+    useEffect(() => {
+        const timer = window.setInterval(() => {
+            setTimeOfDay(getTimeOfDay(new Date()));
+        }, 1000);
+
+        return () => window.clearInterval(timer);
+    }, []);
+
+    const backgroundLayers = {
+        day: { opacity: timeOfDay === "day" ? 1 : 0 },
+        sunset: { opacity: timeOfDay === "sunset" ? 1 : 0 },
+        night: { opacity: timeOfDay === "night" ? 1 : 0 },
+    };
+
     return (
-        <div className="w-full h-full bg-amber-50 playArea" onMouseDown={summonItem} ref={playAreaRef}>
+        <div className="playArea relative h-full w-full overflow-hidden" onMouseDown={summonItem} ref={playAreaRef}>
+            <div
+                className="absolute inset-0 bg-cover bg-center transition-opacity duration-[4500ms] ease-in-out"
+                style={{
+                    backgroundImage: 'url("/media/background/day.png")',
+                    opacity: backgroundLayers.day.opacity,
+                }}
+            />
+            <div
+                className="absolute inset-0 bg-cover bg-center transition-opacity duration-[4500ms] ease-in-out"
+                style={{
+                    backgroundImage: 'url("/media/background/dusk.png")',
+                    opacity: backgroundLayers.sunset.opacity,
+                }}
+            />
+            <div
+                className="absolute inset-0 bg-cover bg-center transition-opacity duration-[4500ms] ease-in-out"
+                style={{
+                    backgroundImage: 'url("/media/background/night.png")',
+                    opacity: backgroundLayers.night.opacity,
+                }}
+            />
+            <div className="absolute inset-0 bg-transparent" aria-live="polite" aria-atomic="true" />
             {pokemon.map((entry) => (
                 <Pokemon
                     key={entry.PokemonUUID}
