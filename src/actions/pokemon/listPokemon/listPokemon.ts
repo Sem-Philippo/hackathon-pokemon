@@ -1,6 +1,7 @@
 "use server";
 
 import { prisma } from "@/prisma/prismaClient";
+import { assignPokemonFoodPreferences } from "@/components/types/Pokemon";
 
 const pokemonCount = 10;
 const maxPokemonId = 1025;
@@ -33,17 +34,24 @@ export async function listPokemon() {
     },
   });
 
-  return pokemon.map((entry) => ({
-    id: entry.id,
-    name: entry.name,
-    hp: entry.hp ?? 0,
-    atk: entry.attack ?? 0,
-    spAtk: entry.specialAttack ?? 0,
-    def: entry.defense ?? 0,
-    spDef: entry.specialDefense ?? 0,
-    speed: entry.speed ?? 0,
-    weight: entry.weight ?? 0,
-    types: [entry.type1, entry.type2].filter((type): type is string => type !== null),
-    canFly: entry.type1 === "flying" || entry.type2 === "flying",
-  }));
+  return pokemon.map((entry) => {
+    const foodPreferences = assignPokemonFoodPreferences(entry.id);
+
+    return {
+      id: entry.id,
+      PokemonUUID: crypto.randomUUID(),
+      name: entry.name,
+      hp: entry.hp ?? 0,
+      atk: entry.attack ?? 0,
+      spAtk: entry.specialAttack ?? 0,
+      def: entry.defense ?? 0,
+      spDef: entry.specialDefense ?? 0,
+      speed: entry.speed ?? 0,
+      weight: entry.weight ?? 0,
+      types: [entry.type1, entry.type2].filter((type): type is string => type !== null),
+      canFly: entry.type1 === "flying" || entry.type2 === "flying",
+      likedFood: foodPreferences.likedFood,
+      dislikedFood: foodPreferences.dislikedFood,
+    };
+  });
 }

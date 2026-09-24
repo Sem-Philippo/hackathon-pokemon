@@ -1,6 +1,6 @@
-"use client";
+﻿"use client";
 
-import {GameItem} from "@/components/molecules/GameItem/GameItem";
+import { GameItem } from "@/components/molecules/GameItem/GameItem";
 import Pokemon from "@/components/molecules/Pokemon/Pokemon";
 import "@/components/organisms/PlayArea/PlayArea.css";
 import { Position } from "@/components/types/Draggable";
@@ -9,41 +9,34 @@ import { useEffect, useRef, useState } from "react";
 import { type PokemonData } from "@/components/types/Pokemon";
 
 type PlayAreaProps = {
-  pokemon: PokemonData[];
-  showDebugInfo: boolean;
+    pokemon: PokemonData[];
+    showDebugInfo: boolean;
+    queuedItems: QueuedItem[];
+    setQueuedItems: React.Dispatch<React.SetStateAction<QueuedItem[]>>;
 };
 
-type PlayAreaProps = {
-    queuedItems: QueuedItem[],
-    setQueuedItems: React.Dispatch<React.SetStateAction<QueuedItem[]>>,
-}
-
-const PlayArea = function PlayArea({queuedItems, setQueuedItems}: PlayAreaProps{ pokemon, showDebugInfo }: PlayAreaProps) {
+const PlayArea = function PlayArea({ pokemon, showDebugInfo, queuedItems, setQueuedItems }: PlayAreaProps) {
     const [width, setWidth] = useState(100);
     const [height, setHeight] = useState(100);
 
     const floorY = height - 50;
-
     const playAreaRef = useRef<HTMLDivElement>(null);
-
     const [items, setItems] = useState<Item[]>([]);
 
-    const pokemon = Array.from({length: 1}, (_, i) => i);
-
     function summonItem(event: React.MouseEvent) {
+        event.stopPropagation();
+
         const playAreaBounds = playAreaRef.current?.getBoundingClientRect();
         const mousePosition: Position = {
             x: event.clientX - (playAreaBounds?.left ?? 0),
             y: event.clientY - (playAreaBounds?.top ?? 0),
-        }
+        };
 
-        if (queuedItems.length == 0) {
-            // No items to spawn
+        if (queuedItems.length === 0) {
             return;
         }
 
         const copyArray = [...queuedItems];
-    
         const firstItem = copyArray.shift();
 
         if (firstItem !== undefined) {
@@ -52,70 +45,81 @@ const PlayArea = function PlayArea({queuedItems, setQueuedItems}: PlayAreaProps{
             const position: Position = {
                 x: mousePosition.x - firstItem.size.width / 2,
                 y: mousePosition.y - firstItem.size.height / 2,
-            }
+            };
 
-            setItems((prev) => [...prev, 
-            {
+            setItems((prev) => [...prev, {
                 name: firstItem.name,
                 type: firstItem.type,
                 size: firstItem.size,
-                position: position,
+                position,
                 uuid: crypto.randomUUID(),
                 wasUsed: false,
-            }])
+            }]);
         }
-        console.log(items);
-        
     }
 
     function itemExists(itemNames: string | string[]) {
-        if (typeof itemNames === 'string') {
-            return items.filter((item) => item.name == itemNames).length >= 1;
+        if (typeof itemNames === "string") {
+            return items.some((item) => item.name === itemNames);
         }
-        
-        return items.filter((item) => itemNames.includes(item.name)).length >= 1;
+
+        return items.some((item) => itemNames.includes(item.name));
     }
 
     function getItems(itemNames: string | string[]) {
-        console.log(itemNames, items);
-        if (typeof itemNames === 'string') {
-            return items.filter((item) => item.name == itemNames);
+        if (typeof itemNames === "string") {
+            return items.filter((item) => item.name === itemNames);
         }
-        
+
         return items.filter((item) => itemNames.includes(item.name));
     }
 
     function deleteItem(item: Item) {
-        setItems((prev) => prev.filter((prevItem) => prevItem.uuid != item.uuid));
+        setItems((prev) => prev.filter((prevItem) => prevItem.uuid !== item.uuid));
     }
 
     function changeItemPosition(uuid: string, newPosition: Position) {
-        const targetItem = items.filter((item) => item.uuid === uuid).at(0);
-
-        if (!targetItem) {
-            return;
-        }
-
-        targetItem.position = newPosition;
+        setItems((prev) => prev.map((item) => item.uuid === uuid ? { ...item, position: newPosition } : item));
     }
 
     useEffect(() => {
         const resizeObserver = new ResizeObserver((event) => {
             setWidth(event[0].contentBoxSize[0].inlineSize);
             setHeight(event[0].contentBoxSize[0].blockSize);
-            console.log("PlayArea resized:", event[0].contentBoxSize[0].inlineSize, event[0].contentBoxSize[0].blockSize);
         });
 
         resizeObserver.observe(playAreaRef.current as Element);
-    }, []);
-    
 
-  return (
-    <div className="w-full h-full bg-amber-50 playArea" onMouseDown={summonItem} ref={playAreaRef}>
-        {pokemon.map((i) => <Pokemon maxX={width} maxY={height} floorY={floorY} itemExists={itemExists} getItems={getItems} deleteItem={deleteItem} key={i}/>)}
-        {items.map((item) => <GameItem maxX={width} maxY={height} floorY={floorY} key={item.uuid} itemData={item} changePosition={changeItemPosition}/>)}
-    </div>
-  );
+        return () => resizeObserver.disconnect();
+    }, []);
+
+    return (
+        <div className="w-full h-full bg-amber-50 playArea" onMouseDown={summonItem} ref={playAreaRef}>
+            {pokemon.map((entry) => (
+                <Pokemon
+                    key={entry.PokemonUUID}
+                    data={entry}
+                    maxX={width}
+                    maxY={height}
+                    floorY={floorY}
+                    showDebugInfo={showDebugInfo}
+                    itemExists={itemExists}
+                    getItems={getItems}
+                    deleteItem={deleteItem}
+                />
+            ))}
+            {items.map((item) => (
+                <GameItem
+                    key={item.uuid}
+                    maxX={width}
+                    maxY={height}
+                    floorY={floorY}
+                    itemData={item}
+                    changePosition={changeItemPosition}
+                />
+            ))}
+        </div>
+    );
 };
 
 export { PlayArea };

@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useRef, useState } from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
 import { type Position } from "@/components/types/Draggable";
 import { PokemonAction, type PokemonData, type PokemonFacing } from "@/components/types/Pokemon";
 import { createPokemonAnimationObject, getPokemonAnimationFrameStyle } from "@/lib/pokemonAnimations";
@@ -32,8 +32,6 @@ const Pokemon = function Pokemon({ maxX, maxY, floorY, itemExists, getItems, del
     const maxHunger = 100;
     const hungerTickSpeed = 1000;
 
-    const interactDistance = 10;
-
     const [width, setWidth] = useState(100);
     const [height, setHeight] = useState(100);
     const adjMaxX = maxX - width;
@@ -49,34 +47,44 @@ const Pokemon = function Pokemon({ maxX, maxY, floorY, itemExists, getItems, del
     const startedUp = useRef<boolean>(false);
     const initialResize = useRef<boolean>(false);
 
-    const neutralFoods = Object.values(FoodItem)
-    .filter(
-        (value): value is FoodItem =>
-            typeof value === "number" &&
-            value !== data.likedFood &&
-            value !== data.dislikedFood
-    )
-    .map(value => FoodItem[value]);
+    const claimedItem = useRef<Item>(null);
+    const [hasClaimed, setHasClaimed] = useState(false);
 
-    const pokemonActions = [
-    PokemonAction.Move,
-    PokemonAction.Idle,
-    ...(data.canFly
-        ? [
-            PokemonAction.Flying,
-            PokemonAction.Landing,
-        ]
-        : []),
-    ...(hunger <= maxHunger * 0.75 && itemExists(FoodItem[data.likedFood]) && !hasClaimed ? [
-        PokemonAction.SlightlyHungry,PokemonAction.SlightlyHungry,PokemonAction.SlightlyHungry,PokemonAction.SlightlyHungry,PokemonAction.SlightlyHungry
-    ] : []),
-    ...(hunger <= maxHunger * 0.5 && itemExists([FoodItem[data.likedFood], ...neutralFoods]) && !hasClaimed ? [
-        PokemonAction.Hungry,
-    ] : []),
-    ...(hunger <= maxHunger * 0.2 && itemExists([FoodItem[data.likedFood], ...neutralFoods, FoodItem[data.dislikedFood]]) && !hasClaimed ? [
-        PokemonAction.Starving,
-    ] : []),
-];
+    const neutralFoods = useMemo(
+        () => Object.values(FoodItem)
+            .filter(
+                (value): value is FoodItem =>
+                    typeof value === "number" &&
+                    value !== data.likedFood &&
+                    value !== data.dislikedFood
+            )
+            .map((value) => FoodItem[value]),
+        [data.dislikedFood, data.likedFood]
+    );
+
+    const pokemonActions = useMemo(() => [
+        PokemonAction.Move,
+        PokemonAction.Idle,
+        ...(data.canFly
+            ? [
+                PokemonAction.Flying,
+                PokemonAction.Landing,
+            ]
+            : []),
+        ...(hunger <= maxHunger * 0.75 && itemExists(FoodItem[data.likedFood]) && !hasClaimed ? [
+            PokemonAction.SlightlyHungry,
+            PokemonAction.SlightlyHungry,
+            PokemonAction.SlightlyHungry,
+            PokemonAction.SlightlyHungry,
+            PokemonAction.SlightlyHungry,
+        ] : []),
+        ...(hunger <= maxHunger * 0.5 && itemExists([FoodItem[data.likedFood], ...neutralFoods]) && !hasClaimed ? [
+            PokemonAction.Hungry,
+        ] : []),
+        ...(hunger <= maxHunger * 0.2 && itemExists([FoodItem[data.likedFood], ...neutralFoods, FoodItem[data.dislikedFood]]) && !hasClaimed ? [
+            PokemonAction.Starving,
+        ] : []),
+    ], [data.canFly, data.dislikedFood, data.likedFood, hasClaimed, hunger, itemExists, neutralFoods]);
 
     const [isDragging, setIsDragging] = useState(false);
     const wasDragging = useRef<boolean>(false);
@@ -121,11 +129,9 @@ const Pokemon = function Pokemon({ maxX, maxY, floorY, itemExists, getItems, del
         let cancelled = false;
 
         async function loadAnimationMetadata() {
-            setSpriteMeta(null);
-
             try {
                 const response = await fetch(`/media/sprites/sprite/${String(data.id).padStart(4, "0")}/AnimData.xml`);
-                if (!response.ok) {
+                if (!response.ok || cancelled) {
                     return;
                 }
 
@@ -164,8 +170,8 @@ const Pokemon = function Pokemon({ maxX, maxY, floorY, itemExists, getItems, del
                 };
                 image.src = `/media/sprites/sprite/${String(data.id).padStart(4, "0")}/${name}-Anim.png`;
             } catch {
-                if (!cancelled) {
-                    setSpriteMeta(null);
+                if (cancelled) {
+                    return;
                 }
             }
         }
@@ -308,7 +314,7 @@ const Pokemon = function Pokemon({ maxX, maxY, floorY, itemExists, getItems, del
 
                 likedFoodItems.forEach(item => {
                     if (!item.claimedBy) {
-                        item.claimedBy = data.name;
+                        item.claimedBy = data.PokemonUUID;
                         console.log("item claimed by", item.claimedBy);
 
                         claimedItem.current = item;
@@ -325,7 +331,7 @@ const Pokemon = function Pokemon({ maxX, maxY, floorY, itemExists, getItems, del
                 foodItems.forEach(item => {
                     if (!item.claimedBy) {
                         console.log("test");
-                        item.claimedBy = data.name;
+                        item.claimedBy = data.PokemonUUID;
                         console.log("item claimed by", item.claimedBy);
 
                         claimedItem.current = item;
@@ -344,7 +350,7 @@ const Pokemon = function Pokemon({ maxX, maxY, floorY, itemExists, getItems, del
 
                 foodItems.forEach(item => {
                     if (!item.claimedBy) {
-                        item.claimedBy = data.name;
+                        item.claimedBy = data.PokemonUUID;
                         console.log("item claimed by", item.claimedBy);
 
                         claimedItem.current = item;
@@ -387,7 +393,7 @@ const Pokemon = function Pokemon({ maxX, maxY, floorY, itemExists, getItems, del
         return () => {
             clearTimeout(timeoutId.current);
         };
-    }, [maxX, maxY, isDragging, getItems, pokemonActions]);
+    }, [data.PokemonUUID, data.canFly, data.dislikedFood, data.likedFood, floorY, getItems, height, isDragging, maxX, maxY, neutralFoods, pokemonActions, pokemonDebug, width]);
 
     useEffect(() => {
         const resizeObserver = new ResizeObserver((event) => {
@@ -403,12 +409,17 @@ const Pokemon = function Pokemon({ maxX, maxY, floorY, itemExists, getItems, del
         return () => clearInterval(intervalId);
     }, []);
 
-    useEffect(() => {if (pokemonDebug) {console.log("hunger is now", hunger)}}, [hunger]);
+    useEffect(() => {if (pokemonDebug) {console.log("hunger is now", hunger)}}, [hunger, pokemonDebug]);
 
-    function updatePosition(position: Position) {
-        setDisplayPosition(position);
+    function updatePosition(nextPosition: Position) {
+        setDisplayPosition((previousPosition) => {
+            if (previousPosition.x !== nextPosition.x) {
+                setFacing(nextPosition.x < previousPosition.x ? "left" : "right");
+            }
+            return nextPosition;
+        });
 
-        checkItemOverlap(position);
+        checkItemOverlap(nextPosition);
     }
 
     function checkItemOverlap(position: Position) {
@@ -472,7 +483,7 @@ const Pokemon = function Pokemon({ maxX, maxY, floorY, itemExists, getItems, del
             className="pokemon" 
             ref={pokemonRef} 
             data-facing={facing}
-            data-pokemon-id={data.id}
+            data-pokemon-id={data.PokemonUUID}
             style={{
                 left: displayPosition.x,
                 top: displayPosition.y,

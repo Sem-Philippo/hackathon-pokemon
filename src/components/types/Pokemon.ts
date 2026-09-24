@@ -2,6 +2,7 @@ import { FoodItem } from "./Items";
 
 type PokemonData = {
     id: number;
+    PokemonUUID: string;
     name: string;
     hp: number;
     atk: number;
@@ -16,6 +17,22 @@ type PokemonData = {
     dislikedFood: FoodItem;
 };
 
+function assignPokemonFoodPreferences(seed: number) {
+    const foods = Object.values(FoodItem)
+        .filter((value): value is FoodItem => typeof value === "number");
+
+    const likedFood = foods[seed % foods.length];
+    const dislikedSeed = (seed + 1 + Math.floor(foods.length / 2)) % foods.length;
+    const dislikedFood = foods[dislikedSeed] === likedFood
+        ? foods[(dislikedSeed + 1) % foods.length]
+        : foods[dislikedSeed];
+
+    return {
+        likedFood,
+        dislikedFood,
+    };
+}
+
 type PokemonFacing = "left" | "right";
 
 const enum PokemonAction {
@@ -29,4 +46,4 @@ const enum PokemonAction {
     Starving, // Will eat hated food
 }
 
-export { PokemonAction, type PokemonData, type PokemonFacing };
+export { PokemonAction, assignPokemonFoodPreferences, type PokemonData, type PokemonFacing };
