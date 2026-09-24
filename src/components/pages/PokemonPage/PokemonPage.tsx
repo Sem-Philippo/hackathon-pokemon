@@ -55,7 +55,7 @@ const PokemonPage = function PokemonPage({ pokemon }: PokemonPageProps) {
       item: {
         name: FoodItem[berry],
         type: ItemType.food,
-        size: { width: 20, height: 20 },
+        size: { width: 30, height: 30 },
       },
     };
   });
