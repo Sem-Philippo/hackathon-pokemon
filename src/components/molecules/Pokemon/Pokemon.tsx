@@ -133,7 +133,7 @@ const Pokemon = function Pokemon({ maxX, maxY, floorY, itemExists, getItems, del
             currentActionState === PokemonAction.Hungry ||
             currentActionState === PokemonAction.Starving ? (isAirborne ? "fly" : "walk") :
             currentActionState === PokemonAction.Sleep ? "sleep" :
-            null;
+            currentAnimation;
 
         if (!animationState) {
             const stoppedAnimation = animationControllerRef.current.stopAnimation();
@@ -497,8 +497,15 @@ const Pokemon = function Pokemon({ maxX, maxY, floorY, itemExists, getItems, del
 
     function handleMovementComplete() {
         console.log("completed");
-        currentAction.current = PokemonAction.Idle;
-        setCurrentActionState(PokemonAction.Idle);
+        if (timeOfDay === 'night') {
+            currentAction.current = PokemonAction.Sleep;
+            setCurrentActionState(PokemonAction.Sleep);
+        }
+        else {
+            currentAction.current = PokemonAction.Idle;
+            setCurrentActionState(PokemonAction.Idle);
+        }
+        
     }
 
     return (
