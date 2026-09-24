@@ -23,6 +23,8 @@ const GameItem = function GameItem({ maxX, maxY, floorY, itemData, changePositio
     const adjMaxY = maxY - height;
     const itemRef = useRef<HTMLDivElement>(null);
 
+    const spritePath = `/media/items/${itemData.name.toLowerCase()}.png`;
+
     const [isDragging, setIsDragging] = useState(false);
 
     function stopDragging() {
@@ -83,7 +85,11 @@ const GameItem = function GameItem({ maxX, maxY, floorY, itemData, changePositio
                 position={position} 
                 onStop={stopDragging}>
                 <div
-                    className="bg-green-500 w-full h-full"
+                    className="w-full h-full"
+                    style={
+                        {backgroundImage: `url("${spritePath}")`,
+                        backgroundSize: `${width}px ${height}px`}
+                    }
                 />
             </Draggable>
             </PhysicsObject>

@@ -37,14 +37,14 @@ const PokemonPage = function PokemonPage({ pokemon }: PokemonPageProps) {
   ].map((berry, index) => {
     const label = FoodItem[berry].replace(/_/g, " ");
     const iconFiles = [
-      "oran-berry",
-      "pecha-berry",
-      "cheri-berry",
-      "rawst-berry",
-      "chesto-berry",
-      "aspear-berry",
-      "sitrus-berry",
-      "lum-berry",
+      "oran_berry",
+      "pecha_berry",
+      "cheri_berry",
+      "rawst_berry",
+      "chesto_berry",
+      "aspear_berry",
+      "sitrus_berry",
+      "lum_berry",
     ];
 
     return {
@@ -55,7 +55,7 @@ const PokemonPage = function PokemonPage({ pokemon }: PokemonPageProps) {
       item: {
         name: FoodItem[berry],
         type: ItemType.food,
-        size: { width: 40, height: 40 },
+        size: { width: 20, height: 20 },
       },
     };
   });
