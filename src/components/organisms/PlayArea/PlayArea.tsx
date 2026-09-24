@@ -1,7 +1,10 @@
 "use client";
 
+import {GameItem} from "@/components/molecules/GameItem/GameItem";
 import Pokemon from "@/components/molecules/Pokemon/Pokemon";
 import "@/components/organisms/PlayArea/PlayArea.css";
+import { Position } from "@/components/types/Draggable";
+import { type QueuedItem, type Item } from "@/components/types/Items";
 import { useEffect, useRef, useState } from "react";
 import { type PokemonData } from "@/components/types/Pokemon";
 
@@ -10,9 +13,91 @@ type PlayAreaProps = {
   showDebugInfo: boolean;
 };
 
-const PlayArea = function PlayArea({ pokemon, showDebugInfo }: PlayAreaProps) {
+type PlayAreaProps = {
+    queuedItems: QueuedItem[],
+    setQueuedItems: React.Dispatch<React.SetStateAction<QueuedItem[]>>,
+}
+
+const PlayArea = function PlayArea({queuedItems, setQueuedItems}: PlayAreaProps{ pokemon, showDebugInfo }: PlayAreaProps) {
     const [width, setWidth] = useState(100);
     const [height, setHeight] = useState(100);
+
+    const floorY = height - 50;
+
+    const playAreaRef = useRef<HTMLDivElement>(null);
+
+    const [items, setItems] = useState<Item[]>([]);
+
+    const pokemon = Array.from({length: 1}, (_, i) => i);
+
+    function summonItem(event: React.MouseEvent) {
+        const playAreaBounds = playAreaRef.current?.getBoundingClientRect();
+        const mousePosition: Position = {
+            x: event.clientX - (playAreaBounds?.left ?? 0),
+            y: event.clientY - (playAreaBounds?.top ?? 0),
+        }
+
+        if (queuedItems.length == 0) {
+            // No items to spawn
+            return;
+        }
+
+        const copyArray = [...queuedItems];
+    
+        const firstItem = copyArray.shift();
+
+        if (firstItem !== undefined) {
+            setQueuedItems(copyArray);
+
+            const position: Position = {
+                x: mousePosition.x - firstItem.size.width / 2,
+                y: mousePosition.y - firstItem.size.height / 2,
+            }
+
+            setItems((prev) => [...prev, 
+            {
+                name: firstItem.name,
+                type: firstItem.type,
+                size: firstItem.size,
+                position: position,
+                uuid: crypto.randomUUID(),
+                wasUsed: false,
+            }])
+        }
+        console.log(items);
+        
+    }
+
+    function itemExists(itemNames: string | string[]) {
+        if (typeof itemNames === 'string') {
+            return items.filter((item) => item.name == itemNames).length >= 1;
+        }
+        
+        return items.filter((item) => itemNames.includes(item.name)).length >= 1;
+    }
+
+    function getItems(itemNames: string | string[]) {
+        console.log(itemNames, items);
+        if (typeof itemNames === 'string') {
+            return items.filter((item) => item.name == itemNames);
+        }
+        
+        return items.filter((item) => itemNames.includes(item.name));
+    }
+
+    function deleteItem(item: Item) {
+        setItems((prev) => prev.filter((prevItem) => prevItem.uuid != item.uuid));
+    }
+
+    function changeItemPosition(uuid: string, newPosition: Position) {
+        const targetItem = items.filter((item) => item.uuid === uuid).at(0);
+
+        if (!targetItem) {
+            return;
+        }
+
+        targetItem.position = newPosition;
+    }
 
     useEffect(() => {
         const resizeObserver = new ResizeObserver((event) => {
@@ -21,12 +106,14 @@ const PlayArea = function PlayArea({ pokemon, showDebugInfo }: PlayAreaProps) {
             console.log("PlayArea resized:", event[0].contentBoxSize[0].inlineSize, event[0].contentBoxSize[0].blockSize);
         });
 
-        resizeObserver.observe(document.getElementById("playArea") as Element);
+        resizeObserver.observe(playAreaRef.current as Element);
     }, []);
+    
 
   return (
-    <div id="playArea"className="w-full h-full bg-amber-50 playArea">
-        {pokemon.map((data) => <Pokemon maxX={width} maxY={height} floorY={height - 50} data={data} showDebugInfo={showDebugInfo} key={data.id}/>)}
+    <div className="w-full h-full bg-amber-50 playArea" onMouseDown={summonItem} ref={playAreaRef}>
+        {pokemon.map((i) => <Pokemon maxX={width} maxY={height} floorY={floorY} itemExists={itemExists} getItems={getItems} deleteItem={deleteItem} key={i}/>)}
+        {items.map((item) => <GameItem maxX={width} maxY={height} floorY={floorY} key={item.uuid} itemData={item} changePosition={changeItemPosition}/>)}
     </div>
   );
 };

@@ -8,7 +8,7 @@ type DraggableProps = {
     maxX: number;
     maxY: number;
     children: React.ReactNode;
-    setDisplayPosition: React.Dispatch<React.SetStateAction<Position>>;
+    setDisplayPosition: (position: Position) => void;
     isDragging: boolean;
     setIsDragging: React.Dispatch<React.SetStateAction<boolean>>;
     position: React.RefObject<Position>;
@@ -77,7 +77,7 @@ const Draggable = function Draggable(
 
     return (
         <div
-            onMouseDown={(e) => {startDragging(e)}}
+            onMouseDown={(e) => {e.stopPropagation(); startDragging(e)}}
             onMouseUp={() => {stopDragging()}}
             className="w-full h-full"
             style={{ background: "transparent" }}
