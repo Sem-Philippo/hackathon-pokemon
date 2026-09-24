@@ -434,8 +434,8 @@ const Pokemon = function Pokemon({ maxX, maxY, floorY, itemExists, getItems, del
 
     function updatePosition(nextPosition: Position) {
         setDisplayPosition((previousPosition) => {
-            if (previousPosition.x !== nextPosition.x) {
-                setFacing((prev) => nextPosition.x < previousPosition.x ? "left" : nextPosition.x > previousPosition.x ? "right" : prev);
+            if (previousPosition.x !== targetPosition.current.x) {
+                setFacing((prev) => targetPosition.current.x < previousPosition.x ? "left" : targetPosition.current.x > previousPosition.x ? "right" : prev);
             }
             return nextPosition;
         });
@@ -544,11 +544,6 @@ const Pokemon = function Pokemon({ maxX, maxY, floorY, itemExists, getItems, del
                 setIsDragging={setIsDragging} 
                 position={position} 
                 onStop={stopDragging}
-                // onMove={(nextPosition, previousPosition) => {
-                //     if (nextPosition.x !== previousPosition.x) {
-                //         setFacing(nextPosition.x < previousPosition.x ? "left" : "right");
-                //     }
-                // }}
                 >
                     <div
                         className="sprite-sheet"
