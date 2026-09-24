@@ -23,6 +23,7 @@ type PokemonProps = {
 
 const Pokemon = function Pokemon({ maxX, maxY, floorY, itemExists, getItems, deleteItem, data, showDebugInfo, spawnPosition = "center" }: PokemonProps) {
     const pokemonScale = 2;
+    const idleAnimationCooldownMs = 10000;
 
     const animationControllerRef = useRef(createPokemonAnimationObject());
     const [currentActionState, setCurrentActionState] = useState<PokemonAction>(PokemonAction.None);
@@ -108,6 +109,7 @@ const Pokemon = function Pokemon({ maxX, maxY, floorY, itemExists, getItems, del
     const wasDragging = useRef<boolean>(false);
 
     const timeoutId = useRef<ReturnType<typeof setTimeout>>(undefined);
+    const idleAnimationCooldownUntil = useRef(0);
 
     useEffect(() => {
         if (isDragging) {
@@ -281,10 +283,14 @@ const Pokemon = function Pokemon({ maxX, maxY, floorY, itemExists, getItems, del
     // Action loop
     useEffect(() => {
         function chooseAction() {
+            const canPlayIdleAnimation = position.current.y >= adjFloorY && Date.now() >= idleAnimationCooldownUntil.current;
+            const availableActions = canPlayIdleAnimation
+                ? pokemonActions
+                : pokemonActions.filter((possibleAction) => possibleAction !== PokemonAction.Idle);
             let validAction = false;
             let action: PokemonAction = PokemonAction.Idle;
             while (!validAction) {
-                action = pokemonActions[Math.floor(Math.random() * pokemonActions.length)];
+                action = availableActions[Math.floor(Math.random() * availableActions.length)];
                 validAction = true;
                 // If the pokemon is already flying, don't fly again
                 if (action === PokemonAction.Flying && position.current.y < adjFloorY) {
@@ -298,6 +304,10 @@ const Pokemon = function Pokemon({ maxX, maxY, floorY, itemExists, getItems, del
 
             currentAction.current = action;
             setCurrentActionState(action);
+
+            if (action === PokemonAction.Idle) {
+                idleAnimationCooldownUntil.current = Date.now() + idleAnimationCooldownMs;
+            }
 
             if (pokemonDebug) {
                 switch (action) {
