@@ -21,8 +21,32 @@ type PokemonProps = {
 };
 
 const Pokemon = function Pokemon({ maxX, maxY, floorY, itemExists, getItems, deleteItem, data, showDebugInfo }: PokemonProps) {
-    const minActionTime = 2000;
-    const maxActionTime = 5000;
+    const pokemonScale = 2;
+
+    const animationControllerRef = useRef(createPokemonAnimationObject());
+    const [currentActionState, setCurrentActionState] = useState<PokemonAction>(PokemonAction.None);
+    const [currentAnimation, setCurrentAnimation] = useState<string | null>("Idle");
+    const [animationFrame, setAnimationFrame] = useState(0);
+    const [facing, setFacing] = useState<PokemonFacing>("right");
+    const [spriteMeta, setSpriteMeta] = useState<{ frameWidth: number; frameHeight: number; frameCount: number; durations: number[]; sheetRows: number; sheetColumns: number } | null>(null);
+
+    const spriteWidth = spriteMeta?.frameWidth ?? 32;
+    const spriteHeight = spriteMeta?.frameHeight ?? 32;
+    const spriteFrames = spriteMeta?.frameCount ?? 1;
+    const spriteStyle = getPokemonAnimationFrameStyle(
+        currentAnimation,
+        facing,
+        animationFrame,
+        spriteWidth,
+        spriteHeight,
+        spriteFrames,
+        spriteMeta?.sheetRows ?? 1,
+        spriteMeta?.sheetColumns ?? spriteFrames,
+    );
+    const spritePath = `/media/sprites/sprite/${String(data.id).padStart(4, "0")}/${currentAnimation ?? "Idle"}-Anim.png`;
+
+    const width = useMemo(() => spriteStyle.width * pokemonScale, [spriteStyle.width, pokemonScale]);
+    const height = useMemo(() => spriteStyle.height * pokemonScale, [spriteStyle.height, pokemonScale]);
 
     const pokemonDebug = true;
 
@@ -32,21 +56,12 @@ const Pokemon = function Pokemon({ maxX, maxY, floorY, itemExists, getItems, del
     const maxHunger = 100;
     const hungerTickSpeed = 1000;
 
-    const [width, setWidth] = useState(100);
-    const [height, setHeight] = useState(100);
-    const adjMaxX = maxX - width;
-    const adjMaxY = maxY - height;
-    const pokemonRef = useRef<HTMLDivElement>(null);
-    const currentAction = useRef<PokemonAction>(PokemonAction.None);
-    const animationControllerRef = useRef(createPokemonAnimationObject());
-    const [currentActionState, setCurrentActionState] = useState<PokemonAction>(PokemonAction.None);
-    const [currentAnimation, setCurrentAnimation] = useState<string | null>("Idle");
-    const [animationFrame, setAnimationFrame] = useState(0);
-    const [facing, setFacing] = useState<PokemonFacing>("right");
-    const [spriteMeta, setSpriteMeta] = useState<{ frameWidth: number; frameHeight: number; frameCount: number; durations: number[]; sheetRows: number; sheetColumns: number } | null>(null);
+    const adjMaxX = useMemo(() => maxX - width / 2, [maxX, width]);
+    const adjMaxY = useMemo(() => maxY - height / 2, [maxY, height]);
+    const adjFloorY = useMemo(() => floorY - spriteHeight / 2, [floorY, spriteHeight]);
 
-    const startedUp = useRef<boolean>(false);
-    const initialResize = useRef<boolean>(false);
+    console.log(width, spriteStyle.width, height, spriteStyle.height);
+    const currentAction = useRef<PokemonAction>(PokemonAction.None);
 
     const claimedItem = useRef<Item>(null);
     const [hasClaimed, setHasClaimed] = useState(false);
@@ -101,7 +116,7 @@ const Pokemon = function Pokemon({ maxX, maxY, floorY, itemExists, getItems, del
             return;
         }
 
-        const isAirborne = data.canFly && position.current.y < floorY;
+        const isAirborne = data.canFly && position.current.y < adjFloorY;
         const animationState =
             currentActionState === PokemonAction.Idle ? "idle" :
             currentActionState === PokemonAction.Flying || currentActionState === PokemonAction.Landing ? "fly" :
@@ -128,7 +143,7 @@ const Pokemon = function Pokemon({ maxX, maxY, floorY, itemExists, getItems, del
             setCurrentAnimation(nextAnimation);
             setAnimationFrame(0);
         }
-    }, [currentActionState, data.canFly, floorY, isDragging]);
+    }, [currentActionState, data.canFly, adjFloorY, isDragging]);
 
     useEffect(() => {
         let cancelled = false;
@@ -219,13 +234,13 @@ const Pokemon = function Pokemon({ maxX, maxY, floorY, itemExists, getItems, del
         setCurrentActionState(PokemonAction.None);
 
         if (!data.canFly) {
-            targetPosition.current.y = floorY;
+            targetPosition.current.y = adjFloorY;
         }
     }
 
     const [displayPosition, setDisplayPosition] = useState<Position>({
         x: 0,
-        y: floorY,
+        y: adjFloorY,
     });
 
     const position = useRef<Position>({
@@ -235,7 +250,7 @@ const Pokemon = function Pokemon({ maxX, maxY, floorY, itemExists, getItems, del
 
     const targetPosition = useRef<Position>({
         x: 0,
-        y: floorY,
+        y: adjFloorY,
     });
 
     // Action loop
@@ -247,11 +262,11 @@ const Pokemon = function Pokemon({ maxX, maxY, floorY, itemExists, getItems, del
                 action = pokemonActions[Math.floor(Math.random() * pokemonActions.length)];
                 validAction = true;
                 // If the pokemon is already flying, don't fly again
-                if (action === PokemonAction.Flying && position.current.y < floorY) {
+                if (action === PokemonAction.Flying && position.current.y < adjFloorY) {
                     validAction = false;
                 }
                 // If the pokemon is already on the ground, don't land again
-                else if (action === PokemonAction.Landing && position.current.y >= floorY) {
+                else if (action === PokemonAction.Landing && position.current.y >= adjFloorY) {
                     validAction = false;
                 }
             }
@@ -286,13 +301,13 @@ const Pokemon = function Pokemon({ maxX, maxY, floorY, itemExists, getItems, del
             }
             
             if (action === PokemonAction.Move || action === PokemonAction.Flying || action === PokemonAction.Landing) {
-                const newX = Math.floor(Math.random() * (maxX - width));
+                const newX = Math.floor(Math.random() * adjMaxX);
 
-                let newY = floorY;
+                let newY = adjFloorY;
 
                 // If the pokemon is already in the air, let it move around in the air while flying or moving
-                if (action === PokemonAction.Flying || (action === PokemonAction.Move && data.canFly && position.current.y < floorY)) {
-                    newY = Math.max(Math.floor(Math.random() * (maxY - height)), height);
+                if (action === PokemonAction.Flying || (action === PokemonAction.Move && data.canFly && position.current.y < adjFloorY)) {
+                    newY = Math.max(Math.floor(Math.random() * adjMaxY), height);
                 }
                 targetPosition.current = {
                     x: newX,
@@ -306,7 +321,7 @@ const Pokemon = function Pokemon({ maxX, maxY, floorY, itemExists, getItems, del
             }
             else if (action === PokemonAction.Idle) {
                 if (!data.canFly) {
-                    targetPosition.current.y = floorY;
+                    targetPosition.current.y = adjFloorY;
                 }
             }
             else if (action === PokemonAction.SlightlyHungry) {
@@ -366,8 +381,6 @@ const Pokemon = function Pokemon({ maxX, maxY, floorY, itemExists, getItems, del
                 console.log("setting current action to ", action); 
             }
 
-            const delay = Math.floor(Math.random() * (maxActionTime - minActionTime + 1)) + minActionTime;
-
             timeoutId.current = setTimeout(waitBeforeAction, 100);
         }
 
@@ -399,16 +412,9 @@ const Pokemon = function Pokemon({ maxX, maxY, floorY, itemExists, getItems, del
             console.log("running cleanup");
             clearTimeout(timeoutId.current);
         };
-    }, [data.PokemonUUID, data.canFly, data.dislikedFood, data.likedFood, floorY, getItems, height, isDragging, maxX, maxY, neutralFoods, pokemonActions, pokemonDebug, width, currentAction, currentActionState]);
+    }, [data.PokemonUUID, data.canFly, data.dislikedFood, data.likedFood, adjFloorY, getItems, height, isDragging, adjMaxX, adjMaxY, neutralFoods, pokemonActions, pokemonDebug, width, currentAction, currentActionState]);
 
     useEffect(() => {
-        const resizeObserver = new ResizeObserver((event) => {
-            setWidth(event[0].contentBoxSize[0].inlineSize);
-            setHeight(event[0].contentBoxSize[0].blockSize);
-        });
-
-        resizeObserver.observe(pokemonRef.current as Element);
-
         // Hunger loop
         const intervalId = setInterval(() => setHunger(prev => Math.max(prev - hungerTick, 0)), hungerTickSpeed)
 
@@ -482,25 +488,9 @@ const Pokemon = function Pokemon({ maxX, maxY, floorY, itemExists, getItems, del
         setCurrentActionState(PokemonAction.Idle);
     }
 
-    const spriteWidth = spriteMeta?.frameWidth ?? 32;
-    const spriteHeight = spriteMeta?.frameHeight ?? 32;
-    const spriteFrames = spriteMeta?.frameCount ?? 1;
-    const spriteStyle = getPokemonAnimationFrameStyle(
-        currentAnimation,
-        facing,
-        animationFrame,
-        spriteWidth,
-        spriteHeight,
-        spriteFrames,
-        spriteMeta?.sheetRows ?? 1,
-        spriteMeta?.sheetColumns ?? spriteFrames,
-    );
-    const spritePath = `/media/sprites/sprite/${String(data.id).padStart(4, "0")}/${currentAnimation ?? "Idle"}-Anim.png`;
-
     return (
         <div 
             className="pokemon" 
-            ref={pokemonRef} 
             data-facing={facing}
             data-pokemon-id={data.PokemonUUID}
             style={{
@@ -508,10 +498,11 @@ const Pokemon = function Pokemon({ maxX, maxY, floorY, itemExists, getItems, del
                 top: displayPosition.y,
                 width: spriteStyle.width,
                 height: spriteStyle.height,
+                scale: pokemonScale,
             }}
         >
             <PhysicsObject
-                floorY={floorY}
+                floorY={adjFloorY}
                 physicsPaused={isDragging}
                 moveSpeed={data.speed}
                 weight={200}
