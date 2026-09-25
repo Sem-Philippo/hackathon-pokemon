@@ -9,4 +9,6 @@
  * 🟢 You can import this file directly.
  */
 export type * from './models/Todo'
+export type * from './models/Pokemon'
+export type * from './models/Evolution'
 export type * from './commonInputTypes'

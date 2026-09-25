@@ -5,7 +5,7 @@ test("todo add, edit, and delete persist across reloads", async ({ page }) => {
   const editedTitle = `${title}-edited`;
 
   await page.goto("/");
-  await expect(page.getByRole("heading", { name: "Todoish" })).toBeVisible();
+  await expect(page.getByRole("heading", { name: "Pokedachi" })).toBeVisible();
   await expect(
     page.getByRole("heading", { name: "Prisma setup test" }),
   ).toHaveCount(0);

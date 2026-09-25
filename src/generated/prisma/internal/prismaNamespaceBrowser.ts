@@ -51,7 +51,9 @@ export const AnyNull = runtime.AnyNull
 
 
 export const ModelName = {
-  Todo: 'Todo'
+  Todo: 'Todo',
+  Pokemon: 'Pokemon',
+  Evolution: 'Evolution'
 } as const
 
 export type ModelName = (typeof ModelName)[keyof typeof ModelName]
@@ -75,6 +77,53 @@ export const TodoScalarFieldEnum = {
 } as const
 
 export type TodoScalarFieldEnum = (typeof TodoScalarFieldEnum)[keyof typeof TodoScalarFieldEnum]
+
+
+export const PokemonScalarFieldEnum = {
+  id: 'id',
+  speciesId: 'speciesId',
+  name: 'name',
+  baseExperience: 'baseExperience',
+  height: 'height',
+  weight: 'weight',
+  hp: 'hp',
+  attack: 'attack',
+  defense: 'defense',
+  specialAttack: 'specialAttack',
+  specialDefense: 'specialDefense',
+  speed: 'speed',
+  type1: 'type1',
+  type2: 'type2',
+  form: 'form',
+  baseForm: 'baseForm',
+  evolvesFromSpecies: 'evolvesFromSpecies',
+  isBaby: 'isBaby',
+  isLegendary: 'isLegendary',
+  isMythical: 'isMythical',
+  growthRate: 'growthRate',
+  genderRate: 'genderRate',
+  cryFile: 'cryFile',
+  createdAt: 'createdAt',
+  updatedAt: 'updatedAt'
+} as const
+
+export type PokemonScalarFieldEnum = (typeof PokemonScalarFieldEnum)[keyof typeof PokemonScalarFieldEnum]
+
+
+export const EvolutionScalarFieldEnum = {
+  id: 'id',
+  fromPokemonId: 'fromPokemonId',
+  toPokemonId: 'toPokemonId',
+  item: 'item',
+  trigger: 'trigger',
+  gender: 'gender',
+  heldItem: 'heldItem',
+  minHappy: 'minHappy',
+  minLevel: 'minLevel',
+  timeOfDay: 'timeOfDay'
+} as const
+
+export type EvolutionScalarFieldEnum = (typeof EvolutionScalarFieldEnum)[keyof typeof EvolutionScalarFieldEnum]
 
 
 export const SortOrder = {

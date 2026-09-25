@@ -4,19 +4,34 @@ import { Header } from "@/components/organisms/Header/Header";
 
 export type PageTemplateProps = Omit<ComponentProps<"div">, "ref"> & {
   children: ReactNode;
+  showHeader?: boolean;
+  showFooter?: boolean;
 };
 
 const PageTemplate = forwardRef<HTMLDivElement, PageTemplateProps>(
-  function PageTemplate({ children, className, ...props }, ref) {
+  function PageTemplate({
+    children,
+    className,
+    showHeader = true,
+    showFooter = true,
+    ...props
+  }, ref) {
     const classes = ["flex min-h-screen flex-col bg-zinc-50 h-full", className]
+      .filter(Boolean)
+      .join(" ");
+
+    const mainClasses = [
+      "flex-1 h-full",
+      showHeader || showFooter ? "px-6 py-8" : "p-0",
+    ]
       .filter(Boolean)
       .join(" ");
 
     return (
       <div {...props} ref={ref} className={classes}>
-        <Header />
-        <main className="flex-1 px-6 py-8 h-full">{children}</main>
-        <Footer />
+        {showHeader ? <Header /> : null}
+        <main className={mainClasses}>{children}</main>
+        {showFooter ? <Footer /> : null}
       </div>
     );
   },

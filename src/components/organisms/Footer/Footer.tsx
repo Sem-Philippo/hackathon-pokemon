@@ -18,7 +18,7 @@ const Footer = forwardRef<HTMLElement, FooterProps>(function Footer(
 
   return (
     <footer {...props} ref={ref} className={classes}>
-      <p className="text-sm text-zinc-600">© 2026 Todoish</p>
+      <p className="text-sm text-zinc-600">© 2026 Pokedachi</p>
       <nav aria-label="Footer" className="flex gap-4">
         <a href="#" className={linkClasses}>
           Terms

@@ -45,14 +45,14 @@ function mockActions() {
   };
 }
 
-test("empty initialTodos shows empty message, Add, and Todoish heading", async () => {
+test("empty initialTodos shows empty message, Add, and Pokedachi heading", async () => {
   const screen = await render(<TodoPage {...mockActions()} />);
   await expect.element(screen.getByText("No todos yet.")).toBeVisible();
   await expect
     .element(screen.getByRole("button", { name: "Add" }))
     .toBeVisible();
   await expect
-    .element(screen.getByRole("heading", { name: "Todoish" }))
+    .element(screen.getByRole("heading", { name: "Pokedachi" }))
     .toBeVisible();
 });
 

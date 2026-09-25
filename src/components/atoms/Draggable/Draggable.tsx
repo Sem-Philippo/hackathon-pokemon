@@ -8,12 +8,13 @@ type DraggableProps = {
     maxX: number;
     maxY: number;
     children: React.ReactNode;
-    setDisplayPosition: React.Dispatch<React.SetStateAction<Position>>;
+    setDisplayPosition: (position: Position) => void;
     isDragging: boolean;
     setIsDragging: React.Dispatch<React.SetStateAction<boolean>>;
     position: React.RefObject<Position>;
     onStop?: () => void;
     onStart?: () => void;
+    onMove?: (position: Position, previousPosition: Position) => void;
 };
 
 const Draggable = function Draggable(
@@ -26,7 +27,8 @@ const Draggable = function Draggable(
         setIsDragging, 
         position, 
         onStop,
-        onStart
+        onStart,
+        onMove
     }: DraggableProps) {
 
     const dragOffset = useRef<Position>({ x: 0, y: 0 });
@@ -52,6 +54,7 @@ const Draggable = function Draggable(
     useEffect(() => {
         function handleMouseMove(event: MouseEvent) {
             if (isDragging) {
+                const previousPosition = { ...position.current };
                 const newX = Math.max(Math.min(event.clientX - dragOffset.current.x, maxX), 0);
                 const newY = Math.max(Math.min(event.clientY - dragOffset.current.y, maxY), 0);
 
@@ -61,6 +64,7 @@ const Draggable = function Draggable(
                     };
 
                     setDisplayPosition(position.current);
+                    onMove?.(position.current, previousPosition);
             }
         }
 
@@ -69,13 +73,14 @@ const Draggable = function Draggable(
         return () => {
             window.removeEventListener("mousemove", handleMouseMove);
         }
-    },[isDragging]);
+    },[isDragging, maxX, maxY, onMove, position, setDisplayPosition]);
 
     return (
         <div
-            onMouseDown={(e) => {startDragging(e)}}
+            onMouseDown={(e) => {e.stopPropagation(); startDragging(e)}}
             onMouseUp={() => {stopDragging()}}
-            className="bg-blue-300 w-full h-full"
+            className="w-full h-full"
+            style={{ background: "transparent" }}
         >
             {children}
         </div>

@@ -1,6 +1,7 @@
 datasource db {
   provider = "sqlite"
 }
+
 generator client {
   provider = "prisma-client"
   output   = "../src/generated/prisma"
@@ -9,6 +10,60 @@ generator client {
 model Todo {
   id        Int      @id @default(autoincrement())
   createdAt DateTime @default(now())
-  title String
+  title     String
   description String?
+}
+
+model Pokemon {
+  id               Int      @id
+  speciesId        Int
+  name             String
+  baseExperience   Int?
+  height           Int?
+  weight           Int?
+  hp               Int?
+  attack           Int?
+  defense          Int?
+  specialAttack    Int?
+  specialDefense   Int?
+  speed            Int?
+  type1            String?
+  type2            String?
+  form             String?
+  baseForm         Int?
+  evolvesFromSpecies Int?
+  isBaby           Boolean?
+  isLegendary      Boolean?
+  isMythical       Boolean?
+  growthRate       String?
+  genderRate       Int?
+  cryFile          String?
+  createdAt        DateTime @default(now())
+  updatedAt        DateTime @updatedAt
+
+  evolutionFrom    Evolution[] @relation("EvolutionFrom")
+  evolutionTo      Evolution[] @relation("EvolutionTo")
+
+  @@index([speciesId])
+  @@index([baseForm])
+  @@index([form])
+}
+
+model Evolution {
+  id          Int      @id @default(autoincrement())
+  fromPokemonId Int
+  toPokemonId   Int
+  item         String?
+  trigger      String?
+  gender       Int?
+  heldItem     String?
+  minHappy     Int?
+  minLevel     Int?
+  timeOfDay    String?
+
+  fromPokemon  Pokemon @relation("EvolutionFrom", fields: [fromPokemonId], references: [id], onDelete: Cascade)
+  toPokemon    Pokemon @relation("EvolutionTo", fields: [toPokemonId], references: [id], onDelete: Cascade)
+
+  @@index([fromPokemonId])
+  @@index([toPokemonId])
 }

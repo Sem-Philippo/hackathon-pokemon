@@ -1,3 +1,14 @@
 .pokemon {
     position: absolute;
+    display: inline-block;
+    overflow: visible;
+}
+
+.sprite-sheet {
+    display: block;
+    image-rendering: pixelated;
+    background-repeat: no-repeat;
+    background-position: center;
+    pointer-events: none;
+    transform: translateZ(0);
 }
