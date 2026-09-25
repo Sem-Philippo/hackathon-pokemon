@@ -19,7 +19,7 @@ const GameItem = function GameItem({ maxX, maxY, floorY, itemData, changePositio
 
     const [width, setWidth] = useState(itemData.size.width);
     const [height, setHeight] = useState(itemData.size.height);
-    const itemOffset = 80;
+    const itemOffset = 50;
     const adjMaxX = maxX - width;
     const adjMaxY = maxY - height - itemOffset;
     const itemRef = useRef<HTMLDivElement>(null);
