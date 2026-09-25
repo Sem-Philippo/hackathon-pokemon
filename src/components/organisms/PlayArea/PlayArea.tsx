@@ -167,6 +167,7 @@ const PlayArea = function PlayArea({ pokemon, showDebugInfo, queuedItems, setQue
                     maxY={height}
                     floorY={floorY}
                     showDebugInfo={showDebugInfo}
+                    spawnPosition={entry.spawnPosition}
                     itemExists={itemExists}
                     getItems={getItems}
                     deleteItem={deleteItem}

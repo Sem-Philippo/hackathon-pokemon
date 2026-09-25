@@ -20,6 +20,7 @@ export default async function Home() {
   return (
     <PokemonPage
       pokemon={pokemon}
+      getPokemon={listPokemon}
     />
   );
 }

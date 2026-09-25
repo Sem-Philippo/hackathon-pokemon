@@ -18,11 +18,13 @@ import { type PokemonData } from "@/components/types/Pokemon";
 
 type PokemonPageProps = {
   pokemon: PokemonData[];
+  getPokemon: () => Promise<PokemonData[]>;
 };
 
 const showPokemonDebugInfo = false;
 
-const PokemonPage = function PokemonPage({ pokemon }: PokemonPageProps) {
+const PokemonPage = function PokemonPage({ pokemon: initialPokemon, getPokemon }: PokemonPageProps) {
+  const [pokemon, setPokemon] = useState(initialPokemon);
   const [queuedItems, setQueuedItems] = useState<QueuedItem[]>([]);
 
   const shopItems: ShopItem[] = [
@@ -60,12 +62,39 @@ const PokemonPage = function PokemonPage({ pokemon }: PokemonPageProps) {
     };
   });
 
+  shopItems.push({
+    id: "egg",
+    label: "Egg",
+    cost: 100,
+    icon: "/media/items/egg.png",
+    item: {
+      name: "Egg",
+      type: ItemType.egg,
+      size: { width: 40, height: 40 },
+    },
+  });
+
+  async function buyItem(item: QueuedItem) {
+    if (item.type === ItemType.egg) {
+      const newPokemon = await getPokemon();
+      const hatchedPokemon = newPokemon[0];
+
+      if (hatchedPokemon) {
+        setPokemon((previous) => [...previous, { ...hatchedPokemon, spawnPosition: "top" }]);
+      }
+
+      return;
+    }
+
+    setQueuedItems((previous) => [...previous, item]);
+  }
+
   return (
     <PageTemplate showHeader={false} showFooter={false}>
       <div className="relative h-full w-full overflow-hidden bg-stone-100">
         <Shop
           items={shopItems}
-          onBuy={(item) => setQueuedItems((prev) => [...prev, item])}
+          onBuy={buyItem}
         />
         <PlayArea queuedItems={queuedItems} setQueuedItems={setQueuedItems} pokemon={pokemon} showDebugInfo={showPokemonDebugInfo}/>
       </div>
